@@ -1,0 +1,15 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}FinView AI{% endblock %}</title>
+  <meta name="description" content="{% block description %}FinView AI{% endblock %}">
+  <link rel="stylesheet" href="{% static 'gastos/css/styles.css' %}">
+</head>
+<body class="{% block body_class %}{% endblock %}">
+  {% block body %}{% endblock %}
+  {% block scripts %}{% endblock %}
+</body>
+</html>

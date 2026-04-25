@@ -1,0 +1,20 @@
+{% extends 'gastos/base.html' %}
+{% load static %}
+
+{% block body %}
+  {% include 'gastos/partials/background.html' %}
+
+  <div class="app">
+    {% include 'gastos/partials/sidebar.html' %}
+    <main class="main">
+      {% block app_content %}{% endblock %}
+    </main>
+  </div>
+
+  {% include 'gastos/partials/mobile_nav.html' %}
+  {% include 'gastos/partials/ai_panel.html' %}
+{% endblock %}
+
+{% block scripts %}
+  <script src="{% static 'gastos/js/app.js' %}"></script>
+{% endblock %}

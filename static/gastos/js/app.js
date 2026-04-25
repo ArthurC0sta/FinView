@@ -1,0 +1,1 @@
+document.querySelectorAll('[data-fill]').forEach(el=>{el.style.width=el.dataset.fill+'%'});

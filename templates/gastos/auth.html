@@ -1,0 +1,18 @@
+{% extends 'gastos/base.html' %}
+
+{% block body_class %}auth-page{% endblock %}
+
+{% block body %}
+  {% include 'gastos/partials/background.html' with subtle=True %}
+
+  <main class="auth-shell">
+    <div class="auth-card {% block auth_width %}{% endblock %}">
+      <div class="text-center mb-6">
+        {% include 'gastos/partials/logo.html' %}
+      </div>
+      <section class="glass-strong auth-panel">
+        {% block auth_content %}{% endblock %}
+      </section>
+    </div>
+  </main>
+{% endblock %}
