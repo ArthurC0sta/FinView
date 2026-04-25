@@ -1,3 +1,38 @@
-<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Cadastro — FinView AI</title><link rel="stylesheet" href="assets/styles.css"></head><body>
-<main class="auth"><section class="card auth-card"><h1>Criar conta</h1><p>Preencha os dados para iniciar.</p><form class="form" action="dashboard.html"><div class="field"><label>Nome</label><input class="input" placeholder="Seu nome" required></div><div class="field"><label>E-mail</label><input class="input" type="email" placeholder="voce@email.com" required></div><div class="field"><label>Senha</label><input class="input" type="password" required></div><div class="field"><label>Objetivo financeiro</label><select class="select"><option>Controlar gastos</option><option>Economizar dinheiro</option><option>Reduzir dívidas</option><option>Investir melhor</option></select></div><button class="btn btn-primary btn-block">Criar conta</button></form><p style="margin-top:18px;text-align:center" class="muted">Já tem conta? <a href="login.html">Entrar</a></p></section></main>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Criar conta — FinView AI</title>
+<meta name="description" content="Cadastre-se no FinView AI." />
+<link rel="stylesheet" href="assets/styles.css" />
+</head>
+<body>
+<div class="bg-anim subtle"><div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div></div><div class="bg-grid"></div>
+
+<main style="min-height:100vh;display:grid;place-items:center;padding:2rem 1rem">
+  <div style="width:100%;max-width:480px">
+    <div class="text-center mb-6"><a href="landing.html" class="logo"><span class="dot">F</span><span>FinView <span class="text-gradient">AI</span></span></a></div>
+    <div class="glass-strong" style="padding:2rem">
+      <h1 class="font-display text-2xl font-bold text-center">Crie sua conta</h1>
+      <p class="text-sm muted text-center mt-2">Vamos personalizar a IA para você</p>
+      <form action="monthly.html" style="margin-top:1.5rem">
+        <label class="label">Nome completo</label>
+        <input class="input" placeholder="Seu nome" required />
+        <label class="label mt-4">E-mail</label>
+        <input class="input" type="email" placeholder="voce@email.com" required />
+        <label class="label mt-4">Senha</label>
+        <input class="input" type="password" placeholder="••••••••" required />
+        <label class="label mt-4">Objetivo financeiro principal</label>
+        <div class="grid g2" id="goals" style="gap:.5rem"><button type="button" class="goal-opt" data-id="0" style="padding:.8rem;border-radius:.75rem;border:1px solid hsl(0 0% 100% / .10);background:hsl(0 0% 100% / .04);text-align:left;font-size:.85rem;display:flex;align-items:center;gap:.5rem"><span>🐷</span>Economizar dinheiro</button><button type="button" class="goal-opt" data-id="1" style="padding:.8rem;border-radius:.75rem;border:1px solid hsl(0 0% 100% / .10);background:hsl(0 0% 100% / .04);text-align:left;font-size:.85rem;display:flex;align-items:center;gap:.5rem"><span>📉</span>Reduzir dívidas</button><button type="button" class="goal-opt" data-id="2" style="padding:.8rem;border-radius:.75rem;border:1px solid hsl(0 0% 100% / .10);background:hsl(0 0% 100% / .04);text-align:left;font-size:.85rem;display:flex;align-items:center;gap:.5rem"><span>👛</span>Controlar gastos</button><button type="button" class="goal-opt" data-id="3" style="padding:.8rem;border-radius:.75rem;border:1px solid hsl(0 0% 100% / .10);background:hsl(0 0% 100% / .04);text-align:left;font-size:.85rem;display:flex;align-items:center;gap:.5rem"><span>📈</span>Investir melhor</button></div>
+        <button type="submit" class="btn btn-primary mt-6" style="width:100%">Criar conta →</button>
+      </form>
+      <p class="text-sm muted text-center mt-6">Já tem conta? <a href="login.html" style="color:hsl(var(--primary));font-weight:500">Entrar</a></p>
+    </div>
+  </div>
+</main>
+<script>
+  const opts=document.querySelectorAll('.goal-opt');let active=opts[0];if(active){active.style.borderColor='hsl(var(--primary))';active.style.background='hsl(var(--primary) / .12)'}
+  opts.forEach(o=>o.addEventListener('click',()=>{if(active){active.style.borderColor='hsl(0 0% 100% / .10)';active.style.background='hsl(0 0% 100% / .04)'}active=o;o.style.borderColor='hsl(var(--primary))';o.style.background='hsl(var(--primary) / .12)'}));
+</script>
 </body></html>

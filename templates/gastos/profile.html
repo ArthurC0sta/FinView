@@ -1,4 +1,85 @@
-<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Perfil — FinView AI</title><link rel="stylesheet" href="assets/styles.css"></head><body>
-<div class="app"><aside class="sidebar"><a class="logo" href="landing.html">FinView <span>AI</span></a><nav class="menu"><a href="dashboard.html">Dashboard</a><a href="monthly.html">Mensal</a><a href="new-expense.html">Nova despesa</a><a class="active" href="profile.html">Perfil</a><a href="landing.html">Sair</a></nav></aside>
-<main class="main"><div class="page-title"><div><h1>Perfil</h1><p>Dados básicos do usuário.</p></div></div><section class="grid grid-2"><div class="card"><h3>Dados pessoais</h3><form class="form" style="margin-top:12px"><div class="field"><label>Nome</label><input class="input" value="João Silva"></div><div class="field"><label>E-mail</label><input class="input" value="joao.silva@email.com"></div><button class="btn btn-primary">Salvar</button></form></div><div class="card"><h3>Resumo</h3><p class="muted">Score financeiro atual</p><strong style="font-size:3rem;color:var(--primary-2)">78</strong><div class="insight">Perfil com boa margem de economia no mês atual.</div></div></section></main></div>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Perfil — FinView AI</title>
+<meta name="description" content="Gerencie sua conta no FinView AI." />
+<link rel="stylesheet" href="assets/styles.css" />
+</head>
+<body>
+<div class="bg-anim"><div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div></div><div class="bg-grid"></div>
+
+<div class="app">
+  
+<aside class="sidebar">
+  <div class="brand"><a href="landing.html" class="logo"><span class="dot">F</span><span>FinView <span class="text-gradient">AI</span></span></a></div>
+  <a href="dashboard.html" class="nav-item "><span>📊</span>Dashboard</a>
+<a href="monthly.html" class="nav-item "><span>📅</span>Mensal</a>
+<a href="new-expense.html" class="nav-item "><span>🧾</span>Nova despesa</a>
+<a href="profile.html" class="nav-item active"><span>👤</span>Perfil</a>
+  <div style="margin-top:auto;padding-top:1rem;border-top:1px solid hsl(0 0% 100% / .06)">
+    <a href="landing.html" class="nav-item">↩ Sair</a>
+  </div>
+</aside>
+
+  <main class="main">
+<div style="max-width:1000px">
+  <div class="mb-6">
+    <h1 class="font-display text-3xl font-bold">Meu Perfil</h1>
+    <p class="muted mt-2">Gerencie suas informações e veja seu histórico financeiro.</p>
+  </div>
+  <div class="grid g2">
+    <div class="glass-strong">
+      <div class="flex items-center gap-4 mb-4">
+        <div style="width:72px;height:72px;border-radius:50%;background:var(--gradient-primary);display:grid;place-items:center;font-size:1.6rem;font-weight:700;box-shadow:var(--shadow-glow)">A</div>
+        <div><h3 class="font-display font-semibold text-lg">Ana Souza</h3><p class="text-sm muted">ana@finview.ai</p></div>
+      </div>
+      <label class="label">Nome</label><input class="input" value="Ana Souza" />
+      <label class="label mt-4">E-mail</label><input class="input" value="ana@finview.ai" />
+      <label class="label mt-4">Objetivo financeiro</label>
+      <select class="select"><option>Economizar dinheiro</option><option>Reduzir dívidas</option><option>Controlar gastos</option><option>Investir melhor</option></select>
+      <button class="btn btn-primary mt-6" style="width:100%">Salvar alterações</button>
+    </div>
+    <div class="glass">
+      <h3 class="font-display font-semibold text-lg mb-4">Histórico mensal</h3>
+      <div class="list-row"><div><p class="text-sm font-medium">Abril 2025</p><p class="text-xs muted">Saldo: R$ 2.954</p></div><div class="text-center"><p class="font-display text-lg font-bold text-gradient">78</p><p class="text-xs muted">Score</p></div></div><div class="list-row"><div><p class="text-sm font-medium">Março 2025</p><p class="text-xs muted">Saldo: R$ 2.500</p></div><div class="text-center"><p class="font-display text-lg font-bold text-gradient">74</p><p class="text-xs muted">Score</p></div></div><div class="list-row"><div><p class="text-sm font-medium">Fevereiro 2025</p><p class="text-xs muted">Saldo: R$ 2.100</p></div><div class="text-center"><p class="font-display text-lg font-bold text-gradient">71</p><p class="text-xs muted">Score</p></div></div><div class="list-row"><div><p class="text-sm font-medium">Janeiro 2025</p><p class="text-xs muted">Saldo: R$ 2.300</p></div><div class="text-center"><p class="font-display text-lg font-bold text-gradient">70</p><p class="text-xs muted">Score</p></div></div>
+      <div class="divider"></div>
+      <div class="text-center">
+        <p class="uppercase-tag">Score atual</p>
+        <p class="font-display text-5xl font-bold text-gradient mt-2">78</p>
+        <p class="text-xs muted mt-2">+5 vs. mês anterior</p>
+      </div>
+    </div>
+  </div>
+  <div class="glass mt-4">
+    <h3 class="font-display font-semibold text-lg mb-4">Preferências</h3>
+    <div class="flex justify-between items-center" style="padding:.7rem 0;border-bottom:1px solid hsl(0 0% 100% / .06)"><div><p class="text-sm font-medium">Notificações por e-mail</p><p class="text-xs muted">Receba alertas semanais</p></div><div class="chip">Ativado</div></div>
+    <div class="flex justify-between items-center" style="padding:.7rem 0;border-bottom:1px solid hsl(0 0% 100% / .06)"><div><p class="text-sm font-medium">Insights diários da IA</p><p class="text-xs muted">Sugestões personalizadas</p></div><div class="chip">Ativado</div></div>
+    <div class="flex justify-between items-center" style="padding:.7rem 0"><div><p class="text-sm font-medium">Modo escuro</p><p class="text-xs muted">Interface premium</p></div><div class="chip">Sempre</div></div>
+  </div>
+</div>
+</main>
+</div>
+<nav class="mobile-nav"><a href="dashboard.html" class=""><span style="font-size:1.1rem">📊</span>Dashboard</a><a href="monthly.html" class=""><span style="font-size:1.1rem">📅</span>Mensal</a><a href="new-expense.html" class=""><span style="font-size:1.1rem">🧾</span>Gasto</a><a href="profile.html" class="active"><span style="font-size:1.1rem">👤</span>Perfil</a></nav>
+
+<button id="aiToggle" class="ai-toggle" aria-label="Abrir IA">✨</button>
+<aside id="aiPanel" class="ai-panel" style="position:fixed">
+  <button id="aiClose" class="close-x" aria-label="Fechar">✕</button>
+  <div class="flex items-center gap-3 mb-4">
+    <div class="kpi-icon" style="width:38px;height:38px">✨</div>
+    <div>
+      <h3 class="font-display font-semibold">FinView AI</h3>
+      <p class="text-xs muted">Análises personalizadas</p>
+    </div>
+  </div>
+  <div class="ai-card alert-t"><p class="text-xs muted">⚠️ Alerta</p><p class="text-sm mt-2">Seus gastos com lazer estão 38% acima da sua média mensal.</p></div>
+<div class="ai-card tip"><p class="text-xs muted">💡 Dica</p><p class="text-sm mt-2">Você pode economizar R$ 230 reduzindo despesas supérfluas como streaming duplicado.</p></div>
+<div class="ai-card goal"><p class="text-xs muted">🎯 Objetivo</p><p class="text-sm mt-2">Seu objetivo é economizar dinheiro — priorize cortar gastos variáveis este mês.</p></div>
+<div class="ai-card positive"><p class="text-xs muted">✅ Bom sinal</p><p class="text-sm mt-2">Seus gastos essenciais estão dentro do esperado (52% da renda).</p></div>
+  <div class="divider"></div>
+  <p class="text-xs muted">Os insights são atualizados conforme você adiciona despesas.</p>
+</aside>
+
+<script src="assets/app.js"></script>
 </body></html>

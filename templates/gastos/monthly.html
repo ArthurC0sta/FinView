@@ -1,4 +1,90 @@
-<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Mensal — FinView AI</title><link rel="stylesheet" href="assets/styles.css"></head><body>
-<div class="app"><aside class="sidebar"><a class="logo" href="landing.html">FinView <span>AI</span></a><nav class="menu"><a href="dashboard.html">Dashboard</a><a class="active" href="monthly.html">Mensal</a><a href="new-expense.html">Nova despesa</a><a href="profile.html">Perfil</a><a href="landing.html">Sair</a></nav></aside>
-<main class="main"><div class="page-title"><div><h1>Análise mensal</h1><p>Histórico resumido dos lançamentos.</p></div></div><section class="card"><table class="table"><thead><tr><th>Data</th><th>Categoria</th><th>Tipo</th><th>Valor</th></tr></thead><tbody><tr><td>10/04/2026</td><td>Aluguel</td><td><span class="badge badge-fixed">Fixa</span></td><td>R$ 1.111,59</td></tr><tr><td>10/04/2026</td><td>Internet</td><td><span class="badge badge-fixed">Fixa</span></td><td>R$ 527,49</td></tr><tr><td>15/04/2026</td><td>Transporte</td><td><span class="badge badge-var">Variável</span></td><td>R$ 311,59</td></tr></tbody></table></section></main></div>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Entrada Mensal — FinView AI</title>
+<meta name="description" content="Configure sua renda e despesas do mês." />
+<link rel="stylesheet" href="assets/styles.css" />
+</head>
+<body>
+<div class="bg-anim"><div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div></div><div class="bg-grid"></div>
+
+<div class="app">
+  
+<aside class="sidebar">
+  <div class="brand"><a href="landing.html" class="logo"><span class="dot">F</span><span>FinView <span class="text-gradient">AI</span></span></a></div>
+  <a href="dashboard.html" class="nav-item "><span>📊</span>Dashboard</a>
+<a href="monthly.html" class="nav-item active"><span>📅</span>Mensal</a>
+<a href="new-expense.html" class="nav-item "><span>🧾</span>Nova despesa</a>
+<a href="profile.html" class="nav-item "><span>👤</span>Perfil</a>
+  <div style="margin-top:auto;padding-top:1rem;border-top:1px solid hsl(0 0% 100% / .06)">
+    <a href="landing.html" class="nav-item">↩ Sair</a>
+  </div>
+</aside>
+
+  <main class="main">
+<div style="max-width:1100px">
+  <div class="mb-6">
+    <h1 class="font-display text-3xl font-bold">Entrada Mensal</h1>
+    <p class="muted mt-2">Configure sua renda e revise os gastos do mês de Abril.</p>
+  </div>
+  <div class="grid g2">
+    <div class="glass-strong">
+      <h3 class="font-display font-semibold text-lg mb-4">Renda do mês</h3>
+      <label class="label">Renda total (R$)</label>
+      <input class="input" type="number" value="7200" />
+      <label class="label mt-4">Tipo de renda</label>
+      <select class="select"><option>Salário fixo</option><option>Freelance / Variável</option><option>Misto</option></select>
+      <label class="label mt-4">Mês de referência</label>
+      <input class="input" type="month" value="2025-04" />
+      <button class="btn btn-primary mt-6" style="width:100%">Salvar entrada mensal</button>
+    </div>
+    <div class="glass">
+      <h3 class="font-display font-semibold text-lg mb-4">Resumo</h3>
+      <div class="flex justify-between" style="padding:.5rem 0;border-bottom:1px solid hsl(0 0% 100% / .06)"><span class="muted">Renda</span><span class="font-bold">R$ 7.200,00</span></div>
+      <div class="flex justify-between" style="padding:.5rem 0;border-bottom:1px solid hsl(0 0% 100% / .06)"><span class="muted">Gastos</span><span class="font-bold">R$ 4046.00</span></div>
+      <div class="flex justify-between" style="padding:.5rem 0;border-bottom:1px solid hsl(0 0% 100% / .06)"><span class="muted">Saldo</span><span class="font-bold text-gradient">R$ 3154.00</span></div>
+      <div class="flex justify-between" style="padding:.5rem 0"><span class="muted">% comprometida</span><span class="font-bold">56%</span></div>
+      <div class="bar-track mt-4"><div class="bar-fill" style="width:56%"></div></div>
+    </div>
+  </div>
+  <div class="glass mt-4">
+    <div class="flex justify-between items-center mb-4">
+      <h3 class="font-display font-semibold text-lg">Despesas registradas</h3>
+      <a href="new-expense.html" class="btn btn-primary">+ Nova despesa</a>
+    </div>
+    <div style="overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;font-size:.92rem">
+        <thead><tr style="text-align:left;border-bottom:1px solid hsl(0 0% 100% / .08);color:hsl(var(--muted-foreground));font-size:.78rem;text-transform:uppercase;letter-spacing:.05em">
+          <th style="padding:.7rem .5rem">Despesa</th><th style="padding:.7rem .5rem">Categoria</th><th style="padding:.7rem .5rem;text-align:right">Valor</th>
+        </tr></thead>
+        <tbody><tr><td style="padding:,7rem ,5rem">Aluguel</td><td style="padding:,7rem ,5rem"><span class="chip">Moradia</span></td><td style="padding:,7rem ,5rem;text-align:right;font-weight:600">R$ 1.800,00</td></tr><tr><td style="padding:,7rem ,5rem">Supermercado</td><td style="padding:,7rem ,5rem"><span class="chip">Alimentação</span></td><td style="padding:,7rem ,5rem;text-align:right;font-weight:600">R$ 920,00</td></tr><tr><td style="padding:,7rem ,5rem">Netflix</td><td style="padding:,7rem ,5rem"><span class="chip">Assinaturas</span></td><td style="padding:,7rem ,5rem;text-align:right;font-weight:600">R$ 55,00</td></tr><tr><td style="padding:,7rem ,5rem">Uber</td><td style="padding:,7rem ,5rem"><span class="chip">Transporte</span></td><td style="padding:,7rem ,5rem;text-align:right;font-weight:600">R$ 280,00</td></tr><tr><td style="padding:,7rem ,5rem">Restaurante</td><td style="padding:,7rem ,5rem"><span class="chip">Lazer</span></td><td style="padding:,7rem ,5rem;text-align:right;font-weight:600">R$ 420,00</td></tr><tr><td style="padding:,7rem ,5rem">Academia</td><td style="padding:,7rem ,5rem"><span class="chip">Saúde</span></td><td style="padding:,7rem ,5rem;text-align:right;font-weight:600">R$ 120,00</td></tr><tr><td style="padding:,7rem ,5rem">Curso Online</td><td style="padding:,7rem ,5rem"><span class="chip">Educação</span></td><td style="padding:,7rem ,5rem;text-align:right;font-weight:600">R$ 199,00</td></tr><tr><td style="padding:,7rem ,5rem">Cinema</td><td style="padding:,7rem ,5rem"><span class="chip">Lazer</span></td><td style="padding:,7rem ,5rem;text-align:right;font-weight:600">R$ 85,00</td></tr><tr><td style="padding:,7rem ,5rem">Spotify</td><td style="padding:,7rem ,5rem"><span class="chip">Assinaturas</span></td><td style="padding:,7rem ,5rem;text-align:right;font-weight:600">R$ 22,00</td></tr><tr><td style="padding:,7rem ,5rem">Farmácia</td><td style="padding:,7rem ,5rem"><span class="chip">Saúde</span></td><td style="padding:,7rem ,5rem;text-align:right;font-weight:600">R$ 145,00</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+</main>
+</div>
+<nav class="mobile-nav"><a href="dashboard.html" class=""><span style="font-size:1.1rem">📊</span>Dashboard</a><a href="monthly.html" class="active"><span style="font-size:1.1rem">📅</span>Mensal</a><a href="new-expense.html" class=""><span style="font-size:1.1rem">🧾</span>Gasto</a><a href="profile.html" class=""><span style="font-size:1.1rem">👤</span>Perfil</a></nav>
+
+<button id="aiToggle" class="ai-toggle" aria-label="Abrir IA">✨</button>
+<aside id="aiPanel" class="ai-panel" style="position:fixed">
+  <button id="aiClose" class="close-x" aria-label="Fechar">✕</button>
+  <div class="flex items-center gap-3 mb-4">
+    <div class="kpi-icon" style="width:38px;height:38px">✨</div>
+    <div>
+      <h3 class="font-display font-semibold">FinView AI</h3>
+      <p class="text-xs muted">Análises personalizadas</p>
+    </div>
+  </div>
+  <div class="ai-card alert-t"><p class="text-xs muted">⚠️ Alerta</p><p class="text-sm mt-2">Seus gastos com lazer estão 38% acima da sua média mensal.</p></div>
+<div class="ai-card tip"><p class="text-xs muted">💡 Dica</p><p class="text-sm mt-2">Você pode economizar R$ 230 reduzindo despesas supérfluas como streaming duplicado.</p></div>
+<div class="ai-card goal"><p class="text-xs muted">🎯 Objetivo</p><p class="text-sm mt-2">Seu objetivo é economizar dinheiro — priorize cortar gastos variáveis este mês.</p></div>
+<div class="ai-card positive"><p class="text-xs muted">✅ Bom sinal</p><p class="text-sm mt-2">Seus gastos essenciais estão dentro do esperado (52% da renda).</p></div>
+  <div class="divider"></div>
+  <p class="text-xs muted">Os insights são atualizados conforme você adiciona despesas.</p>
+</aside>
+
+<script src="assets/app.js"></script>
 </body></html>
