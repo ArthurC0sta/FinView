@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -5,25 +6,25 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Entrar — FinView AI</title>
 <meta name="description" content="Acesse sua conta FinView AI." />
-<link rel="stylesheet" href="assets/styles.css" />
+<link rel="stylesheet" href="{% static 'assets/css/styles.css' %}" />
 </head>
 <body>
 <div class="bg-anim subtle"><div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div></div><div class="bg-grid"></div>
 
 <main style="min-height:100vh;display:grid;place-items:center;padding:2rem 1rem">
   <div style="width:100%;max-width:420px">
-    <div class="text-center mb-6"><a href="landing.html" class="logo"><span class="dot">F</span><span>FinView <span class="text-gradient">AI</span></span></a></div>
+    <div class="text-center mb-6"><a href="{% url 'gastos:landing' %}" class="logo"><span class="dot">F</span><span>FinView <span class="text-gradient">AI</span></span></a></div>
     <div class="glass-strong" style="padding:2rem">
       <h1 class="font-display text-2xl font-bold text-center">Bem-vindo de volta</h1>
       <p class="text-sm muted text-center mt-2">Entre na sua conta para continuar</p>
-      <form action="dashboard.html" style="margin-top:2rem">
+      <form action="{% url 'gastos:dashboard' %}" style="margin-top:2rem">
         <label class="label">E-mail</label>
         <input class="input" type="email" placeholder="voce@email.com" required />
         <div class="flex justify-between mt-4"><label class="label">Senha</label><a href="#" class="text-xs" style="color:hsl(var(--primary))">Esqueci a senha</a></div>
         <input class="input" type="password" placeholder="••••••••" required />
         <button type="submit" class="btn btn-primary mt-6" style="width:100%">Entrar →</button>
       </form>
-      <p class="text-sm muted text-center mt-6">Ainda não tem conta? <a href="signup.html" style="color:hsl(var(--primary));font-weight:500">Criar agora</a></p>
+      <p class="text-sm muted text-center mt-6">Ainda não tem conta? <a href="{% url 'gastos:signup' %}" style="color:hsl(var(--primary));font-weight:500">Criar agora</a></p>
     </div>
   </div>
 </main>
