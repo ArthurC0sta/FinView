@@ -17,15 +17,17 @@
     <div class="glass-strong" style="padding:2rem">
       <h1 class="font-display text-2xl font-bold text-center">Crie sua conta</h1>
       <p class="text-sm muted text-center mt-2">Vamos personalizar a IA para você</p>
-      <form action="{% url 'gastos:monthly' %}" style="margin-top:1.5rem">
+      <form action="{% url 'gastos:signup' %}" method="post" style="margin-top:1.5rem">
+        {% csrf_token %}
         <label class="label">Nome completo</label>
-        <input class="input" placeholder="Seu nome" required />
+        <input class="input" name="name" placeholder="Seu nome" required />
         <label class="label mt-4">E-mail</label>
-        <input class="input" type="email" placeholder="voce@email.com" required />
+        <input class="input" name="email" type="email" placeholder="voce@email.com" required />
         <label class="label mt-4">Senha</label>
-        <input class="input" type="password" placeholder="••••••••" required />
+        <input class="input" name="password" type="password" placeholder="••••••••" required />
         <label class="label mt-4">Objetivo financeiro principal</label>
-        <div class="grid g2" id="goals" style="gap:.5rem"><button type="button" class="goal-opt" data-id="0" style="padding:.8rem;border-radius:.75rem;border:1px solid hsl(0 0% 100% / .10);background:hsl(0 0% 100% / .04);text-align:left;font-size:.85rem;display:flex;align-items:center;gap:.5rem"><span>🐷</span>Economizar dinheiro</button><button type="button" class="goal-opt" data-id="1" style="padding:.8rem;border-radius:.75rem;border:1px solid hsl(0 0% 100% / .10);background:hsl(0 0% 100% / .04);text-align:left;font-size:.85rem;display:flex;align-items:center;gap:.5rem"><span>📉</span>Reduzir dívidas</button><button type="button" class="goal-opt" data-id="2" style="padding:.8rem;border-radius:.75rem;border:1px solid hsl(0 0% 100% / .10);background:hsl(0 0% 100% / .04);text-align:left;font-size:.85rem;display:flex;align-items:center;gap:.5rem"><span>👛</span>Controlar gastos</button><button type="button" class="goal-opt" data-id="3" style="padding:.8rem;border-radius:.75rem;border:1px solid hsl(0 0% 100% / .10);background:hsl(0 0% 100% / .04);text-align:left;font-size:.85rem;display:flex;align-items:center;gap:.5rem"><span>📈</span>Investir melhor</button></div>
+        <input id="goal-input" name="goal" type="hidden" value="Economizar dinheiro" />
+        <div class="grid g2" id="goals" style="gap:.5rem"><button type="button" class="goal-opt" data-goal="Economizar dinheiro" style="padding:.8rem;border-radius:.75rem;border:1px solid hsl(0 0% 100% / .10);background:hsl(0 0% 100% / .04);text-align:left;font-size:.85rem;display:flex;align-items:center;gap:.5rem"><span>🐷</span>Economizar dinheiro</button><button type="button" class="goal-opt" data-goal="Reduzir dívidas" style="padding:.8rem;border-radius:.75rem;border:1px solid hsl(0 0% 100% / .10);background:hsl(0 0% 100% / .04);text-align:left;font-size:.85rem;display:flex;align-items:center;gap:.5rem"><span>📉</span>Reduzir dívidas</button><button type="button" class="goal-opt" data-goal="Controlar gastos" style="padding:.8rem;border-radius:.75rem;border:1px solid hsl(0 0% 100% / .10);background:hsl(0 0% 100% / .04);text-align:left;font-size:.85rem;display:flex;align-items:center;gap:.5rem"><span>👛</span>Controlar gastos</button><button type="button" class="goal-opt" data-goal="Investir melhor" style="padding:.8rem;border-radius:.75rem;border:1px solid hsl(0 0% 100% / .10);background:hsl(0 0% 100% / .04);text-align:left;font-size:.85rem;display:flex;align-items:center;gap:.5rem"><span>📈</span>Investir melhor</button></div>
         <button type="submit" class="btn btn-primary mt-6" style="width:100%">Criar conta →</button>
       </form>
       <p class="text-sm muted text-center mt-6">Já tem conta? <a href="{% url 'gastos:login' %}" style="color:hsl(var(--primary));font-weight:500">Entrar</a></p>
@@ -34,6 +36,7 @@
 </main>
 <script>
   const opts=document.querySelectorAll('.goal-opt');let active=opts[0];if(active){active.style.borderColor='hsl(var(--primary))';active.style.background='hsl(var(--primary) / .12)'}
-  opts.forEach(o=>o.addEventListener('click',()=>{if(active){active.style.borderColor='hsl(0 0% 100% / .10)';active.style.background='hsl(0 0% 100% / .04)'}active=o;o.style.borderColor='hsl(var(--primary))';o.style.background='hsl(var(--primary) / .12)'}));
+  const goalInput=document.querySelector('#goal-input');
+  opts.forEach(o=>o.addEventListener('click',()=>{if(active){active.style.borderColor='hsl(0 0% 100% / .10)';active.style.background='hsl(0 0% 100% / .04)'}active=o;o.style.borderColor='hsl(var(--primary))';o.style.background='hsl(var(--primary) / .12)';if(goalInput){goalInput.value=o.dataset.goal || o.textContent.trim()}}));
 </script>
 </body></html>

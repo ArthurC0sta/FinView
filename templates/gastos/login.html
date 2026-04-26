@@ -17,11 +17,12 @@
     <div class="glass-strong" style="padding:2rem">
       <h1 class="font-display text-2xl font-bold text-center">Bem-vindo de volta</h1>
       <p class="text-sm muted text-center mt-2">Entre na sua conta para continuar</p>
-      <form action="{% url 'gastos:dashboard' %}" style="margin-top:2rem">
+      <form action="{% url 'gastos:login' %}" method="post" style="margin-top:2rem">
+        {% csrf_token %}
         <label class="label">E-mail</label>
-        <input class="input" type="email" placeholder="voce@email.com" required />
+        <input class="input" name="email" type="email" placeholder="voce@email.com" required />
         <div class="flex justify-between mt-4"><label class="label">Senha</label><a href="#" class="text-xs" style="color:hsl(var(--primary))">Esqueci a senha</a></div>
-        <input class="input" type="password" placeholder="••••••••" required />
+        <input class="input" name="password" type="password" placeholder="••••••••" required />
         <button type="submit" class="btn btn-primary mt-6" style="width:100%">Entrar →</button>
       </form>
       <p class="text-sm muted text-center mt-6">Ainda não tem conta? <a href="{% url 'gastos:signup' %}" style="color:hsl(var(--primary));font-weight:500">Criar agora</a></p>

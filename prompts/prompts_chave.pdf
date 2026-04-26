@@ -1,0 +1,214 @@
+%PDF-1.4
+%‚„œ”
+1 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Courier >>
+endobj
+2 0 obj
+<< /Length 4204 >>
+stream
+BT
+/F1 9 Tf
+42 800 Td
+(FinView AI - Prompts-chave da conversa) Tj
+0 -12 Td
+(Gerado em: 26/04/2026 13:57:57) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Este documento resume os prompts mais importantes usados durante a configuracao e evolucao) Tj
+0 -12 Td
+(do projeto.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(============================================================================) Tj
+0 -12 Td
+(1. Ajuste do ambiente virtual) Tj
+0 -12 Td
+(----------------------------------------------------------------------------) Tj
+0 -12 Td
+(Prompt: "ajusta o ambiente virtual neste diretorio atual") Tj
+0 -12 Td
+(Objetivo: criar e configurar o ambiente Python local do projeto.) Tj
+0 -12 Td
+(Resultado gerado: .venv criado, dependencias instaladas, .env minimo preparado e Django) Tj
+0 -12 Td
+(  validado com manage.py check.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(============================================================================) Tj
+0 -12 Td
+(2. Correcao de arquivos estaticos) Tj
+0 -12 Td
+(----------------------------------------------------------------------------) Tj
+0 -12 Td
+(Prompt: "ajusta os arquivos dnv") Tj
+0 -12 Td
+(Contexto: o runserver retornava 404 para /assets/styles.css.) Tj
+0 -12 Td
+(Objetivo: corrigir os caminhos de CSS/JS nos templates Django.) Tj
+0 -12 Td
+(Resultado gerado: templates usando {% static %}, rotas internas usando {% url %}, CSS/JS) Tj
+0 -12 Td
+(  servidos por /static/assets/.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(============================================================================) Tj
+0 -12 Td
+(3. Revisao do erro de assets persistente) Tj
+0 -12 Td
+(----------------------------------------------------------------------------) Tj
+0 -12 Td
+(Prompt: "ve dnv, ta dando erro") Tj
+0 -12 Td
+(Contexto: o servidor ainda registrava Not Found: /assets/styles.css.) Tj
+0 -12 Td
+(Objetivo: encontrar referencias antigas que voltaram aos templates.) Tj
+0 -12 Td
+(Resultado gerado: nova varredura nos templates, correcao de href="assets/styles.css" e) Tj
+0 -12 Td
+(  links .html.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(============================================================================) Tj
+0 -12 Td
+(4. Coerencia entre login e informacoes exibidas) Tj
+0 -12 Td
+(----------------------------------------------------------------------------) Tj
+0 -12 Td
+(Prompt: "quando eu executo o server, no proprio html ja exibe algumas informacoes que nao) Tj
+0 -12 Td
+(  sao coerentes com as informacoes do meu login") Tj
+0 -12 Td
+(Objetivo: remover dados mockados como nome, e-mail, mes e objetivo fixos.) Tj
+0 -12 Td
+(Resultado gerado: fluxo inicial por sessao, paginas internas exigindo login e telas usando) Tj
+0 -12 Td
+(  dados do usuario.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(============================================================================) Tj
+0 -12 Td
+(5. Persistencia no banco de dados) Tj
+0 -12 Td
+(----------------------------------------------------------------------------) Tj
+0 -12 Td
+(Prompt: "precsamos registrar os gastos, informacoes de login, e-mail e senha no db") Tj
+0 -12 Td
+(Objetivo: salvar cadastro, login, renda mensal e despesas no banco.) Tj
+0 -12 Td
+(Resultado gerado: uso do User nativo do Django, senha com hash, models UserProfile,) Tj
+0 -12 Td
+(  MonthlyIncome e Expense, forms ligados ao DB e migrations criadas.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(============================================================================) Tj
+0 -12 Td
+(6. PDF com schema do banco) Tj
+0 -12 Td
+(----------------------------------------------------------------------------) Tj
+0 -12 Td
+(Prompt: "gera um arquivo pdf mostrando o schema do db") Tj
+0 -12 Td
+(Objetivo: documentar o schema real do banco SQLite naquele momento.) Tj
+0 -12 Td
+(Resultado gerado: docs/db_schema.pdf com tabelas, campos, relacionamentos, FKs, indices e) Tj
+0 -12 Td
+(  restricoes.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(============================================================================) Tj
+0 -12 Td
+(7. Adaptacao do schema com utilidade das tabelas) Tj
+0 -12 Td
+(----------------------------------------------------------------------------) Tj
+0 -12 Td
+(Prompt: "pode adaptar o schema? indicando a utilidade de cada tbl?") Tj
+0 -12 Td
+(Objetivo: melhorar a documentacao do schema explicando para que cada tabela serve.) Tj
+ET
+endstream
+endobj
+3 0 obj
+<< /Type /Page /Parent 6 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R >> >> /Contents 2 0 R >>
+endobj
+4 0 obj
+<< /Length 1438 >>
+stream
+BT
+/F1 9 Tf
+42 800 Td
+(Resultado gerado: docs/db_schema.pdf atualizado com visao geral, fluxo de dados, utilidade) Tj
+0 -12 Td
+(  das tabelas e descricao dos campos principais.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(============================================================================) Tj
+0 -12 Td
+(8. Configuracao do banco Render) Tj
+0 -12 Td
+(----------------------------------------------------------------------------) Tj
+0 -12 Td
+(Prompt: "criei um db no render e salvei todas as informacoes no .env, faca as configuracoes) Tj
+0 -12 Td
+(  de hambiente") Tj
+0 -12 Td
+(Objetivo: configurar o projeto para usar PostgreSQL do Render via variaveis de ambiente.) Tj
+0 -12 Td
+(Resultado gerado: settings.py lendo) Tj
+0 -12 Td
+(  DATABASE_URL/external_database_url/internal_database_url, requirements com psycopg,) Tj
+0 -12 Td
+(  migrations aplicadas no Render.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(============================================================================) Tj
+0 -12 Td
+(9. PDF de prompts-chave) Tj
+0 -12 Td
+(----------------------------------------------------------------------------) Tj
+0 -12 Td
+(Prompt: "crie uma pasta chamada prompts, salve nela um arquivo pdf com os principais) Tj
+0 -12 Td
+(  prompts da nossa conversa") Tj
+0 -12 Td
+(Objetivo: documentar os prompts que direcionaram as principais etapas do desenvolvimento.) Tj
+0 -12 Td
+(Resultado gerado: este arquivo PDF em prompts/prompts_chave.pdf.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 6 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R >> >> /Contents 4 0 R >>
+endobj
+6 0 obj
+<< /Type /Pages /Kids [3 0 R 5 0 R] /Count 2 >>
+endobj
+7 0 obj
+<< /Type /Catalog /Pages 6 0 R >>
+endobj
+xref
+0 8
+0000000000 65535 f 
+0000000015 00000 n 
+0000000083 00000 n 
+0000004339 00000 n 
+0000004465 00000 n 
+0000005955 00000 n 
+0000006081 00000 n 
+0000006144 00000 n 
+trailer
+<< /Size 8 /Root 7 0 R >>
+startxref
+6193
+%%EOF

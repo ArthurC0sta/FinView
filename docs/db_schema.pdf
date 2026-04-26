@@ -1,0 +1,602 @@
+%PDF-1.4
+%âãÏÓ
+1 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Courier >>
+endobj
+2 0 obj
+<< /Length 4602 >>
+stream
+BT
+/F1 8 Tf
+42 800 Td
+(FinView AI - Schema do Banco de Dados) Tj
+0 -11 Td
+(Arquivo: /Users/arthurcosta/Library/CloudStorage/OneDrive-TREO/faculdade/FinView_Ai/db.sqlite3) Tj
+0 -11 Td
+(Gerado em: 26/04/2026 13:35:17) Tj
+0 -11 Td
+() Tj
+0 -11 Td
+(Visao geral) Tj
+0 -11 Td
+(Este banco usa as tabelas padrao do Django para autenticacao, permissoes e sessoes,) Tj
+0 -11 Td
+(e tabelas do app gastos para armazenar perfil financeiro, renda mensal e despesas.) Tj
+0 -11 Td
+() Tj
+0 -11 Td
+(Fluxo principal de dados) Tj
+0 -11 Td
+(1. O cadastro cria um registro em auth_user e um perfil em gastos_userprofile.) Tj
+0 -11 Td
+(2. O login autentica usando auth_user.username/email e auth_user.password hasheado.) Tj
+0 -11 Td
+(3. A renda mensal e salva em gastos_monthlyincome por usuario e mes.) Tj
+0 -11 Td
+(4. Cada gasto e salvo em gastos_expense vinculado ao usuario logado.) Tj
+0 -11 Td
+(5. Dashboard e tela mensal leem gastos_expense e gastos_monthlyincome para montar os indicadores.) Tj
+0 -11 Td
+() Tj
+0 -11 Td
+(Relacionamentos principais) Tj
+0 -11 Td
+(- auth_user 1:1 gastos_userprofile) Tj
+0 -11 Td
+(- auth_user 1:N gastos_monthlyincome) Tj
+0 -11 Td
+(- auth_user 1:N gastos_expense) Tj
+0 -11 Td
+(- gastos_monthlyincome possui restricao unique\(user_id, reference_month\)) Tj
+0 -11 Td
+() Tj
+0 -11 Td
+(Utilidade das tabelas) Tj
+0 -11 Td
+(- auth_user: Armazena as contas dos usuários. Contém e-mail, nome, flags administrativas e a senha) Tj
+0 -11 Td
+(  com hash seguro do Django.) Tj
+0 -11 Td
+(- gastos_userprofile: Complementa auth_user com dados específicos do FinView AI, como o objetivo) Tj
+0 -11 Td
+(  financeiro principal do usuário.) Tj
+0 -11 Td
+(- gastos_monthlyincome: Registra a renda mensal de cada usuário por mês de referência. Usada para) Tj
+0 -11 Td
+(  calcular saldo, percentual comprometido e resumo mensal.) Tj
+0 -11 Td
+(- gastos_expense: Registra cada despesa lançada pelo usuário, incluindo valor, data, categoria,) Tj
+0 -11 Td
+(  recorrência, prioridade e observações.) Tj
+0 -11 Td
+(- auth_group: Grupos de permissões do Django. Permite agrupar usuários por papéis administrativos.) Tj
+0 -11 Td
+(- auth_group_permissions: Tabela de ligação entre grupos e permissões.) Tj
+0 -11 Td
+(- auth_permission: Permissões geradas pelo Django para criar, editar, visualizar e remover) Tj
+0 -11 Td
+(  registros.) Tj
+0 -11 Td
+(- auth_user_groups: Tabela de ligação entre usuários e grupos.) Tj
+0 -11 Td
+(- auth_user_user_permissions: Tabela de ligação entre usuários e permissões individuais.) Tj
+0 -11 Td
+(- django_admin_log: Histórico de ações feitas no painel administrativo do Django.) Tj
+0 -11 Td
+(- django_content_type: Catálogo interno dos modelos registrados no Django; usado por permissões e) Tj
+0 -11 Td
+(  admin.) Tj
+0 -11 Td
+(- django_migrations: Controle interno do Django para saber quais migrations já foram aplicadas ao) Tj
+0 -11 Td
+(  banco.) Tj
+0 -11 Td
+(- django_session: Guarda sessões ativas do Django, permitindo manter o usuário logado entre) Tj
+0 -11 Td
+(  requisições.) Tj
+0 -11 Td
+() Tj
+0 -11 Td
+(Diagrama textual) Tj
+0 -11 Td
+(auth_user) Tj
+0 -11 Td
+(  |-- gastos_userprofile.user_id \(UNIQUE\)) Tj
+0 -11 Td
+(  |-- gastos_monthlyincome.user_id) Tj
+0 -11 Td
+(  |-- gastos_expense.user_id) Tj
+0 -11 Td
+() Tj
+0 -11 Td
+(========================================================================) Tj
+0 -11 Td
+(Tabela: auth_user) Tj
+0 -11 Td
+(------------------------------------------------------------------------) Tj
+0 -11 Td
+(Utilidade: Armazena as contas dos usuários. Contém e-mail, nome, flags administrativas e a senha) Tj
+0 -11 Td
+(com hash seguro do Django.) Tj
+0 -11 Td
+() Tj
+0 -11 Td
+(Campos:) Tj
+0 -11 Td
+(  - id: INTEGER [PK | NOT NULL] - Identificador único do usuário.) Tj
+0 -11 Td
+(  - password: varchar\(128\) [NOT NULL] - Senha criptografada/hasheada pelo Django.) Tj
+0 -11 Td
+(  - last_login: datetime - Data e hora do último login.) Tj
+0 -11 Td
+(  - is_superuser: bool [NOT NULL] - Indica se o usuário tem acesso total ao sistema.) Tj
+0 -11 Td
+(  - username: varchar\(150\) [NOT NULL] - Identificador de login; neste projeto recebe o e-mail.) Tj
+0 -11 Td
+(  - last_name: varchar\(150\) [NOT NULL] - Restante do nome informado no cadastro.) Tj
+0 -11 Td
+(  - email: varchar\(254\) [NOT NULL] - E-mail do usuário.) Tj
+0 -11 Td
+(  - is_staff: bool [NOT NULL] - Permite acesso ao Django Admin quando verdadeiro.) Tj
+0 -11 Td
+(  - is_active: bool [NOT NULL] - Indica se a conta está ativa.) Tj
+0 -11 Td
+(  - date_joined: datetime [NOT NULL] - Data de criação da conta.) Tj
+0 -11 Td
+(  - first_name: varchar\(150\) [NOT NULL] - Primeiro nome informado no cadastro.) Tj
+ET
+endstream
+endobj
+3 0 obj
+<< /Type /Page /Parent 10 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R >> >> /Contents 2 0 R >>
+endobj
+4 0 obj
+<< /Length 4283 >>
+stream
+BT
+/F1 8 Tf
+42 800 Td
+(Indices e restricoes:) Tj
+0 -11 Td
+(  - UNIQUE sqlite_autoindex_auth_user_1 \(username\)) Tj
+0 -11 Td
+() Tj
+0 -11 Td
+(========================================================================) Tj
+0 -11 Td
+(Tabela: gastos_userprofile) Tj
+0 -11 Td
+(------------------------------------------------------------------------) Tj
+0 -11 Td
+(Utilidade: Complementa auth_user com dados específicos do FinView AI, como o objetivo financeiro) Tj
+0 -11 Td
+(principal do usuário.) Tj
+0 -11 Td
+() Tj
+0 -11 Td
+(Campos:) Tj
+0 -11 Td
+(  - id: INTEGER [PK | NOT NULL] - Identificador único do perfil.) Tj
+0 -11 Td
+(  - goal: varchar\(80\) [NOT NULL] - Objetivo financeiro escolhido no cadastro.) Tj
+0 -11 Td
+(  - user_id: INTEGER [NOT NULL] - Usuário dono deste perfil.) Tj
+0 -11 Td
+(Foreign keys:) Tj
+0 -11 Td
+(  - user_id -> auth_user.id ON DELETE NO ACTION ON UPDATE NO ACTION) Tj
+0 -11 Td
+(Indices e restricoes:) Tj
+0 -11 Td
+(  - UNIQUE sqlite_autoindex_gastos_userprofile_1 \(user_id\)) Tj
+0 -11 Td
+() Tj
+0 -11 Td
+(========================================================================) Tj
+0 -11 Td
+(Tabela: gastos_monthlyincome) Tj
+0 -11 Td
+(------------------------------------------------------------------------) Tj
+0 -11 Td
+(Utilidade: Registra a renda mensal de cada usuário por mês de referência. Usada para calcular) Tj
+0 -11 Td
+(saldo, percentual comprometido e resumo mensal.) Tj
+0 -11 Td
+() Tj
+0 -11 Td
+(Campos:) Tj
+0 -11 Td
+(  - id: INTEGER [PK | NOT NULL] - Identificador único do registro de renda.) Tj
+0 -11 Td
+(  - amount: decimal [NOT NULL] - Valor da renda mensal.) Tj
+0 -11 Td
+(  - income_type: varchar\(20\) [NOT NULL] - Tipo de renda: fixa, variável ou mista.) Tj
+0 -11 Td
+(  - reference_month: date [NOT NULL] - Mês ao qual a renda pertence.) Tj
+0 -11 Td
+(  - created_at: datetime [NOT NULL] - Data de criação do registro.) Tj
+0 -11 Td
+(  - updated_at: datetime [NOT NULL] - Data da última atualização.) Tj
+0 -11 Td
+(  - user_id: INTEGER [NOT NULL] - Usuário dono da renda.) Tj
+0 -11 Td
+(Foreign keys:) Tj
+0 -11 Td
+(  - user_id -> auth_user.id ON DELETE NO ACTION ON UPDATE NO ACTION) Tj
+0 -11 Td
+(Indices e restricoes:) Tj
+0 -11 Td
+(  - gastos_monthlyincome_user_id_be72677b \(user_id\)) Tj
+0 -11 Td
+(  - UNIQUE gastos_monthlyincome_user_id_reference_month_0f873e0e_uniq \(user_id, reference_month\)) Tj
+0 -11 Td
+() Tj
+0 -11 Td
+(========================================================================) Tj
+0 -11 Td
+(Tabela: gastos_expense) Tj
+0 -11 Td
+(------------------------------------------------------------------------) Tj
+0 -11 Td
+(Utilidade: Registra cada despesa lançada pelo usuário, incluindo valor, data, categoria,) Tj
+0 -11 Td
+(recorrência, prioridade e observações.) Tj
+0 -11 Td
+() Tj
+0 -11 Td
+(Campos:) Tj
+0 -11 Td
+(  - id: INTEGER [PK | NOT NULL] - Identificador único da despesa.) Tj
+0 -11 Td
+(  - name: varchar\(120\) [NOT NULL] - Nome/descrição curta da despesa.) Tj
+0 -11 Td
+(  - amount: decimal [NOT NULL] - Valor gasto.) Tj
+0 -11 Td
+(  - date: date [NOT NULL] - Data da despesa.) Tj
+0 -11 Td
+(  - category: varchar\(60\) [NOT NULL] - Categoria financeira, como Moradia ou Alimentação.) Tj
+0 -11 Td
+(  - recurrence: varchar\(20\) [NOT NULL] - Indica se a despesa é fixa ou variável.) Tj
+0 -11 Td
+(  - priority: varchar\(20\) [NOT NULL] - Prioridade da despesa: essencial, importante ou supérflua.) Tj
+0 -11 Td
+(  - notes: TEXT [NOT NULL] - Observações opcionais.) Tj
+0 -11 Td
+(  - created_at: datetime [NOT NULL] - Data de criação do registro.) Tj
+0 -11 Td
+(  - updated_at: datetime [NOT NULL] - Data da última atualização.) Tj
+0 -11 Td
+(  - user_id: INTEGER [NOT NULL] - Usuário dono da despesa.) Tj
+0 -11 Td
+(Foreign keys:) Tj
+0 -11 Td
+(  - user_id -> auth_user.id ON DELETE NO ACTION ON UPDATE NO ACTION) Tj
+0 -11 Td
+(Indices e restricoes:) Tj
+0 -11 Td
+(  - gastos_expense_user_id_5fe71d16 \(user_id\)) Tj
+0 -11 Td
+() Tj
+0 -11 Td
+(========================================================================) Tj
+0 -11 Td
+(Tabela: auth_group) Tj
+0 -11 Td
+(------------------------------------------------------------------------) Tj
+0 -11 Td
+(Utilidade: Grupos de permissões do Django. Permite agrupar usuários por papéis administrativos.) Tj
+0 -11 Td
+() Tj
+0 -11 Td
+(Campos:) Tj
+0 -11 Td
+(  - id: INTEGER [PK | NOT NULL]) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 10 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R >> >> /Contents 4 0 R >>
+endobj
+6 0 obj
+<< /Length 3845 >>
+stream
+BT
+/F1 8 Tf
+42 800 Td
+(  - name: varchar\(150\) [NOT NULL]) Tj
+0 -11 Td
+(Indices e restricoes:) Tj
+0 -11 Td
+(  - UNIQUE sqlite_autoindex_auth_group_1 \(name\)) Tj
+0 -11 Td
+() Tj
+0 -11 Td
+(========================================================================) Tj
+0 -11 Td
+(Tabela: auth_group_permissions) Tj
+0 -11 Td
+(------------------------------------------------------------------------) Tj
+0 -11 Td
+(Utilidade: Tabela de ligação entre grupos e permissões.) Tj
+0 -11 Td
+() Tj
+0 -11 Td
+(Campos:) Tj
+0 -11 Td
+(  - id: INTEGER [PK | NOT NULL]) Tj
+0 -11 Td
+(  - group_id: INTEGER [NOT NULL]) Tj
+0 -11 Td
+(  - permission_id: INTEGER [NOT NULL]) Tj
+0 -11 Td
+(Foreign keys:) Tj
+0 -11 Td
+(  - permission_id -> auth_permission.id ON DELETE NO ACTION ON UPDATE NO ACTION) Tj
+0 -11 Td
+(  - group_id -> auth_group.id ON DELETE NO ACTION ON UPDATE NO ACTION) Tj
+0 -11 Td
+(Indices e restricoes:) Tj
+0 -11 Td
+(  - auth_group_permissions_permission_id_84c5c92e \(permission_id\)) Tj
+0 -11 Td
+(  - auth_group_permissions_group_id_b120cbf9 \(group_id\)) Tj
+0 -11 Td
+(  - UNIQUE auth_group_permissions_group_id_permission_id_0cd325b0_uniq \(group_id, permission_id\)) Tj
+0 -11 Td
+() Tj
+0 -11 Td
+(========================================================================) Tj
+0 -11 Td
+(Tabela: auth_permission) Tj
+0 -11 Td
+(------------------------------------------------------------------------) Tj
+0 -11 Td
+(Utilidade: Permissões geradas pelo Django para criar, editar, visualizar e remover registros.) Tj
+0 -11 Td
+() Tj
+0 -11 Td
+(Campos:) Tj
+0 -11 Td
+(  - id: INTEGER [PK | NOT NULL]) Tj
+0 -11 Td
+(  - content_type_id: INTEGER [NOT NULL]) Tj
+0 -11 Td
+(  - codename: varchar\(100\) [NOT NULL]) Tj
+0 -11 Td
+(  - name: varchar\(255\) [NOT NULL]) Tj
+0 -11 Td
+(Foreign keys:) Tj
+0 -11 Td
+(  - content_type_id -> django_content_type.id ON DELETE NO ACTION ON UPDATE NO ACTION) Tj
+0 -11 Td
+(Indices e restricoes:) Tj
+0 -11 Td
+(  - auth_permission_content_type_id_2f476e4b \(content_type_id\)) Tj
+0 -11 Td
+(  - UNIQUE auth_permission_content_type_id_codename_01ab375a_uniq \(content_type_id, codename\)) Tj
+0 -11 Td
+() Tj
+0 -11 Td
+(========================================================================) Tj
+0 -11 Td
+(Tabela: auth_user_groups) Tj
+0 -11 Td
+(------------------------------------------------------------------------) Tj
+0 -11 Td
+(Utilidade: Tabela de ligação entre usuários e grupos.) Tj
+0 -11 Td
+() Tj
+0 -11 Td
+(Campos:) Tj
+0 -11 Td
+(  - id: INTEGER [PK | NOT NULL]) Tj
+0 -11 Td
+(  - user_id: INTEGER [NOT NULL]) Tj
+0 -11 Td
+(  - group_id: INTEGER [NOT NULL]) Tj
+0 -11 Td
+(Foreign keys:) Tj
+0 -11 Td
+(  - group_id -> auth_group.id ON DELETE NO ACTION ON UPDATE NO ACTION) Tj
+0 -11 Td
+(  - user_id -> auth_user.id ON DELETE NO ACTION ON UPDATE NO ACTION) Tj
+0 -11 Td
+(Indices e restricoes:) Tj
+0 -11 Td
+(  - auth_user_groups_group_id_97559544 \(group_id\)) Tj
+0 -11 Td
+(  - auth_user_groups_user_id_6a12ed8b \(user_id\)) Tj
+0 -11 Td
+(  - UNIQUE auth_user_groups_user_id_group_id_94350c0c_uniq \(user_id, group_id\)) Tj
+0 -11 Td
+() Tj
+0 -11 Td
+(========================================================================) Tj
+0 -11 Td
+(Tabela: auth_user_user_permissions) Tj
+0 -11 Td
+(------------------------------------------------------------------------) Tj
+0 -11 Td
+(Utilidade: Tabela de ligação entre usuários e permissões individuais.) Tj
+0 -11 Td
+() Tj
+0 -11 Td
+(Campos:) Tj
+0 -11 Td
+(  - id: INTEGER [PK | NOT NULL]) Tj
+0 -11 Td
+(  - user_id: INTEGER [NOT NULL]) Tj
+0 -11 Td
+(  - permission_id: INTEGER [NOT NULL]) Tj
+0 -11 Td
+(Foreign keys:) Tj
+0 -11 Td
+(  - permission_id -> auth_permission.id ON DELETE NO ACTION ON UPDATE NO ACTION) Tj
+0 -11 Td
+(  - user_id -> auth_user.id ON DELETE NO ACTION ON UPDATE NO ACTION) Tj
+0 -11 Td
+(Indices e restricoes:) Tj
+0 -11 Td
+(  - auth_user_user_permissions_permission_id_1fbb5f2c \(permission_id\)) Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 10 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R >> >> /Contents 6 0 R >>
+endobj
+8 0 obj
+<< /Length 3290 >>
+stream
+BT
+/F1 8 Tf
+42 800 Td
+(  - auth_user_user_permissions_user_id_a95ead1b \(user_id\)) Tj
+0 -11 Td
+(  - UNIQUE auth_user_user_permissions_user_id_permission_id_14a6b632_uniq \(user_id, permission_id\)) Tj
+0 -11 Td
+() Tj
+0 -11 Td
+(========================================================================) Tj
+0 -11 Td
+(Tabela: django_admin_log) Tj
+0 -11 Td
+(------------------------------------------------------------------------) Tj
+0 -11 Td
+(Utilidade: Histórico de ações feitas no painel administrativo do Django.) Tj
+0 -11 Td
+() Tj
+0 -11 Td
+(Campos:) Tj
+0 -11 Td
+(  - id: INTEGER [PK | NOT NULL]) Tj
+0 -11 Td
+(  - object_id: TEXT) Tj
+0 -11 Td
+(  - object_repr: varchar\(200\) [NOT NULL]) Tj
+0 -11 Td
+(  - action_flag: smallint unsigned [NOT NULL]) Tj
+0 -11 Td
+(  - change_message: TEXT [NOT NULL]) Tj
+0 -11 Td
+(  - content_type_id: INTEGER) Tj
+0 -11 Td
+(  - user_id: INTEGER [NOT NULL]) Tj
+0 -11 Td
+(  - action_time: datetime [NOT NULL]) Tj
+0 -11 Td
+(Foreign keys:) Tj
+0 -11 Td
+(  - user_id -> auth_user.id ON DELETE NO ACTION ON UPDATE NO ACTION) Tj
+0 -11 Td
+(  - content_type_id -> django_content_type.id ON DELETE NO ACTION ON UPDATE NO ACTION) Tj
+0 -11 Td
+(Indices e restricoes:) Tj
+0 -11 Td
+(  - django_admin_log_user_id_c564eba6 \(user_id\)) Tj
+0 -11 Td
+(  - django_admin_log_content_type_id_c4bce8eb \(content_type_id\)) Tj
+0 -11 Td
+() Tj
+0 -11 Td
+(========================================================================) Tj
+0 -11 Td
+(Tabela: django_content_type) Tj
+0 -11 Td
+(------------------------------------------------------------------------) Tj
+0 -11 Td
+(Utilidade: Catálogo interno dos modelos registrados no Django; usado por permissões e admin.) Tj
+0 -11 Td
+() Tj
+0 -11 Td
+(Campos:) Tj
+0 -11 Td
+(  - id: INTEGER [PK | NOT NULL]) Tj
+0 -11 Td
+(  - app_label: varchar\(100\) [NOT NULL]) Tj
+0 -11 Td
+(  - model: varchar\(100\) [NOT NULL]) Tj
+0 -11 Td
+(Indices e restricoes:) Tj
+0 -11 Td
+(  - UNIQUE django_content_type_app_label_model_76bd3d3b_uniq \(app_label, model\)) Tj
+0 -11 Td
+() Tj
+0 -11 Td
+(========================================================================) Tj
+0 -11 Td
+(Tabela: django_migrations) Tj
+0 -11 Td
+(------------------------------------------------------------------------) Tj
+0 -11 Td
+(Utilidade: Controle interno do Django para saber quais migrations já foram aplicadas ao banco.) Tj
+0 -11 Td
+() Tj
+0 -11 Td
+(Campos:) Tj
+0 -11 Td
+(  - id: INTEGER [PK | NOT NULL]) Tj
+0 -11 Td
+(  - app: varchar\(255\) [NOT NULL]) Tj
+0 -11 Td
+(  - name: varchar\(255\) [NOT NULL]) Tj
+0 -11 Td
+(  - applied: datetime [NOT NULL]) Tj
+0 -11 Td
+() Tj
+0 -11 Td
+(========================================================================) Tj
+0 -11 Td
+(Tabela: django_session) Tj
+0 -11 Td
+(------------------------------------------------------------------------) Tj
+0 -11 Td
+(Utilidade: Guarda sessões ativas do Django, permitindo manter o usuário logado entre requisições.) Tj
+0 -11 Td
+() Tj
+0 -11 Td
+(Campos:) Tj
+0 -11 Td
+(  - session_key: varchar\(40\) [PK | NOT NULL]) Tj
+0 -11 Td
+(  - session_data: TEXT [NOT NULL]) Tj
+0 -11 Td
+(  - expire_date: datetime [NOT NULL]) Tj
+0 -11 Td
+(Indices e restricoes:) Tj
+0 -11 Td
+(  - django_session_expire_date_a5c62663 \(expire_date\)) Tj
+0 -11 Td
+(  - UNIQUE sqlite_autoindex_django_session_1 \(session_key\)) Tj
+0 -11 Td
+() Tj
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Page /Parent 10 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R >> >> /Contents 8 0 R >>
+endobj
+10 0 obj
+<< /Type /Pages /Kids [3 0 R 5 0 R 7 0 R 9 0 R] /Count 4 >>
+endobj
+11 0 obj
+<< /Type /Catalog /Pages 10 0 R >>
+endobj
+xref
+0 12
+0000000000 65535 f 
+0000000015 00000 n 
+0000000083 00000 n 
+0000004737 00000 n 
+0000004864 00000 n 
+0000009199 00000 n 
+0000009326 00000 n 
+0000013223 00000 n 
+0000013350 00000 n 
+0000016692 00000 n 
+0000016819 00000 n 
+0000016895 00000 n 
+trailer
+<< /Size 12 /Root 11 0 R >>
+startxref
+16946
+%%EOF

@@ -20,7 +20,7 @@
 <a href="{% url 'gastos:new_expense' %}" class="nav-item "><span>🧾</span>Nova despesa</a>
 <a href="{% url 'gastos:profile' %}" class="nav-item "><span>👤</span>Perfil</a>
   <div style="margin-top:auto;padding-top:1rem;border-top:1px solid hsl(0 0% 100% / .06)">
-    <a href="{% url 'gastos:landing' %}" class="nav-item">↩ Sair</a>
+    <a href="{% url 'gastos:logout' %}" class="nav-item">↩ Sair</a>
   </div>
 </aside>
 
@@ -28,26 +28,27 @@
 <div style="max-width:1100px">
   <div class="mb-6">
     <h1 class="font-display text-3xl font-bold">Entrada Mensal</h1>
-    <p class="muted mt-2">Configure sua renda e revise os gastos do mês de Abril.</p>
+    <p class="muted mt-2">Configure sua renda e revise os gastos de {{ current_month }}.</p>
   </div>
   <div class="grid g2">
-    <div class="glass-strong">
+    <form class="glass-strong" action="{% url 'gastos:monthly' %}" method="post">
+      {% csrf_token %}
       <h3 class="font-display font-semibold text-lg mb-4">Renda do mês</h3>
       <label class="label">Renda total (R$)</label>
-      <input class="input" type="number" value="7200" />
+      <input class="input" name="income_amount" type="number" step="0.01" value="{{ income_amount|default:'0.00' }}" />
       <label class="label mt-4">Tipo de renda</label>
-      <select class="select"><option>Salário fixo</option><option>Freelance / Variável</option><option>Misto</option></select>
+      <select class="select" name="income_type"><option value="fixed">Salário fixo</option><option value="variable">Freelance / Variável</option><option value="mixed">Misto</option></select>
       <label class="label mt-4">Mês de referência</label>
-      <input class="input" type="month" value="2025-04" />
+      <input class="input" name="reference_month" type="month" value="{{ current_month_input }}" />
       <button class="btn btn-primary mt-6" style="width:100%">Salvar entrada mensal</button>
-    </div>
+    </form>
     <div class="glass">
       <h3 class="font-display font-semibold text-lg mb-4">Resumo</h3>
-      <div class="flex justify-between" style="padding:.5rem 0;border-bottom:1px solid hsl(0 0% 100% / .06)"><span class="muted">Renda</span><span class="font-bold">R$ 7.200,00</span></div>
-      <div class="flex justify-between" style="padding:.5rem 0;border-bottom:1px solid hsl(0 0% 100% / .06)"><span class="muted">Gastos</span><span class="font-bold">R$ 4046.00</span></div>
-      <div class="flex justify-between" style="padding:.5rem 0;border-bottom:1px solid hsl(0 0% 100% / .06)"><span class="muted">Saldo</span><span class="font-bold text-gradient">R$ 3154.00</span></div>
-      <div class="flex justify-between" style="padding:.5rem 0"><span class="muted">% comprometida</span><span class="font-bold">56%</span></div>
-      <div class="bar-track mt-4"><div class="bar-fill" style="width:56%"></div></div>
+      <div class="flex justify-between" style="padding:.5rem 0;border-bottom:1px solid hsl(0 0% 100% / .06)"><span class="muted">Renda</span><span class="font-bold">{{ income_amount_display }}</span></div>
+      <div class="flex justify-between" style="padding:.5rem 0;border-bottom:1px solid hsl(0 0% 100% / .06)"><span class="muted">Gastos</span><span class="font-bold">{{ total_expenses_display }}</span></div>
+      <div class="flex justify-between" style="padding:.5rem 0;border-bottom:1px solid hsl(0 0% 100% / .06)"><span class="muted">Saldo</span><span class="font-bold text-gradient">{{ balance_display }}</span></div>
+      <div class="flex justify-between" style="padding:.5rem 0"><span class="muted">% comprometida</span><span class="font-bold">{{ committed }}%</span></div>
+      <div class="bar-track mt-4"><div class="bar-fill" style="width:{{ committed }}%"></div></div>
     </div>
   </div>
   <div class="glass mt-4">
@@ -60,7 +61,7 @@
         <thead><tr style="text-align:left;border-bottom:1px solid hsl(0 0% 100% / .08);color:hsl(var(--muted-foreground));font-size:.78rem;text-transform:uppercase;letter-spacing:.05em">
           <th style="padding:.7rem .5rem">Despesa</th><th style="padding:.7rem .5rem">Categoria</th><th style="padding:.7rem .5rem;text-align:right">Valor</th>
         </tr></thead>
-        <tbody><tr><td style="padding:,7rem ,5rem">Aluguel</td><td style="padding:,7rem ,5rem"><span class="chip">Moradia</span></td><td style="padding:,7rem ,5rem;text-align:right;font-weight:600">R$ 1.800,00</td></tr><tr><td style="padding:,7rem ,5rem">Supermercado</td><td style="padding:,7rem ,5rem"><span class="chip">Alimentação</span></td><td style="padding:,7rem ,5rem;text-align:right;font-weight:600">R$ 920,00</td></tr><tr><td style="padding:,7rem ,5rem">Netflix</td><td style="padding:,7rem ,5rem"><span class="chip">Assinaturas</span></td><td style="padding:,7rem ,5rem;text-align:right;font-weight:600">R$ 55,00</td></tr><tr><td style="padding:,7rem ,5rem">Uber</td><td style="padding:,7rem ,5rem"><span class="chip">Transporte</span></td><td style="padding:,7rem ,5rem;text-align:right;font-weight:600">R$ 280,00</td></tr><tr><td style="padding:,7rem ,5rem">Restaurante</td><td style="padding:,7rem ,5rem"><span class="chip">Lazer</span></td><td style="padding:,7rem ,5rem;text-align:right;font-weight:600">R$ 420,00</td></tr><tr><td style="padding:,7rem ,5rem">Academia</td><td style="padding:,7rem ,5rem"><span class="chip">Saúde</span></td><td style="padding:,7rem ,5rem;text-align:right;font-weight:600">R$ 120,00</td></tr><tr><td style="padding:,7rem ,5rem">Curso Online</td><td style="padding:,7rem ,5rem"><span class="chip">Educação</span></td><td style="padding:,7rem ,5rem;text-align:right;font-weight:600">R$ 199,00</td></tr><tr><td style="padding:,7rem ,5rem">Cinema</td><td style="padding:,7rem ,5rem"><span class="chip">Lazer</span></td><td style="padding:,7rem ,5rem;text-align:right;font-weight:600">R$ 85,00</td></tr><tr><td style="padding:,7rem ,5rem">Spotify</td><td style="padding:,7rem ,5rem"><span class="chip">Assinaturas</span></td><td style="padding:,7rem ,5rem;text-align:right;font-weight:600">R$ 22,00</td></tr><tr><td style="padding:,7rem ,5rem">Farmácia</td><td style="padding:,7rem ,5rem"><span class="chip">Saúde</span></td><td style="padding:,7rem ,5rem;text-align:right;font-weight:600">R$ 145,00</td></tr></tbody>
+        <tbody>{% for expense in expenses %}<tr><td style="padding:.7rem .5rem">{{ expense.name }}</td><td style="padding:.7rem .5rem"><span class="chip">{{ expense.category }}</span></td><td style="padding:.7rem .5rem;text-align:right;font-weight:600">{{ expense.amount_display }}</td></tr>{% empty %}<tr><td colspan="3" style="padding:1rem .5rem;text-align:center" class="muted">Nenhuma despesa registrada ainda.</td></tr>{% endfor %}</tbody>
       </table>
     </div>
   </div>
@@ -81,7 +82,7 @@
   </div>
   <div class="ai-card alert-t"><p class="text-xs muted">⚠️ Alerta</p><p class="text-sm mt-2">Seus gastos com lazer estão 38% acima da sua média mensal.</p></div>
 <div class="ai-card tip"><p class="text-xs muted">💡 Dica</p><p class="text-sm mt-2">Você pode economizar R$ 230 reduzindo despesas supérfluas como streaming duplicado.</p></div>
-<div class="ai-card goal"><p class="text-xs muted">🎯 Objetivo</p><p class="text-sm mt-2">Seu objetivo é economizar dinheiro — priorize cortar gastos variáveis este mês.</p></div>
+<div class="ai-card goal"><p class="text-xs muted">🎯 Objetivo</p><p class="text-sm mt-2">Seu objetivo é {{ user.goal|lower }} — os insights serão ajustados conforme seus lançamentos.</p></div>
 <div class="ai-card positive"><p class="text-xs muted">✅ Bom sinal</p><p class="text-sm mt-2">Seus gastos essenciais estão dentro do esperado (52% da renda).</p></div>
   <div class="divider"></div>
   <p class="text-xs muted">Os insights são atualizados conforme você adiciona despesas.</p>
