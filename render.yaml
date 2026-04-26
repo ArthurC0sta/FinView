@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: finview-ai
+    env: python
+    buildCommand: ./build.sh
+    startCommand: gunicorn config.wsgi:application --bind 0.0.0.0:$PORT
+    envVars:
+      - key: DEBUG
+        value: "False"
+      - key: PYTHON_VERSION
+        value: "3.14.3"
+      - key: SECRET_KEY
+        sync: false
+      - key: ALLOWED_HOSTS
+        sync: false
+      - key: CSRF_TRUSTED_ORIGINS
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: SECURE_SSL_REDIRECT
+        value: "True"
+      - key: SECURE_HSTS_SECONDS
+        value: "31536000"
