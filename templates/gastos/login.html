@@ -30,13 +30,14 @@
       <form action="{% url 'gastos:login' %}" method="post" style="margin-top:2rem">
         {% csrf_token %}
         <label class="label">E-mail</label>
-        <input class="input" name="email" type="email" placeholder="voce@email.com" required />
+        <input class="input" name="email" type="email" placeholder="voce@email.com" autocomplete="email" autocapitalize="none" spellcheck="false" autofocus required />
         <div class="flex justify-between mt-4"><label class="label">Senha</label><a href="#" class="text-xs" style="color:hsl(var(--primary))">Esqueci a senha</a></div>
-        <input class="input" name="password" type="password" placeholder="••••••••" required />
+        <input class="input" name="password" type="password" placeholder="••••••••" autocomplete="current-password" required />
         <button type="submit" class="btn btn-primary mt-6" style="width:100%">Entrar →</button>
       </form>
       <p class="text-sm muted text-center mt-6">Ainda não tem conta? <a href="{% url 'gastos:signup' %}" style="color:hsl(var(--primary));font-weight:500">Criar agora</a></p>
     </div>
   </div>
 </main>
+<script src="{% static 'assets/js/app.js' %}"></script>
 </body></html>

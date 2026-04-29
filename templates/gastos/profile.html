@@ -33,11 +33,11 @@
   <div class="grid g2">
     <div class="glass-strong">
       <div class="flex items-center gap-4 mb-4">
-        <div style="width:72px;height:72px;border-radius:50%;background:var(--gradient-primary);display:grid;place-items:center;font-size:1.6rem;font-weight:700;box-shadow:var(--shadow-glow)">{{ user.initial }}</div>
+        <div style="width:72px;height:72px;border-radius:50%;background:var(--gradient-primary);display:grid;place-items:center;font-size:1.6rem;font-weight:700">{{ user.initial }}</div>
         <div><h3 class="font-display font-semibold text-lg">{{ user.name }}</h3><p class="text-sm muted">{{ user.email }}</p></div>
       </div>
-      <label class="label">Nome</label><input class="input" value="{{ user.name }}" />
-      <label class="label mt-4">E-mail</label><input class="input" value="{{ user.email }}" />
+      <label class="label">Nome</label><input class="input" value="{{ user.name }}" autocomplete="name" />
+      <label class="label mt-4">E-mail</label><input class="input" type="email" value="{{ user.email }}" autocomplete="email" autocapitalize="none" spellcheck="false" />
       <label class="label mt-4">Objetivo financeiro</label>
       <select class="select"><option selected>{{ user.goal }}</option><option>Economizar dinheiro</option><option>Reduzir dívidas</option><option>Controlar gastos</option><option>Investir melhor</option></select>
       <button class="btn btn-primary mt-6" style="width:100%">Salvar alterações</button>

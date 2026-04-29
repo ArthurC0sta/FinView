@@ -71,7 +71,7 @@
       {% for month in monthly_history %}
         <div style="display:flex;flex-direction:column;align-items:center;gap:.45rem;flex:1;min-width:0">
           <div title="Gastos: {{ month.expenses_display }} | Renda: {{ month.income_display }} | Saldo: {{ month.balance_display }}" style="width:100%;max-width:38px;height:145px;display:flex;align-items:flex-end">
-            <div style="width:100%;height:{{ month.height }}%;background:var(--gradient-primary);border-radius:.4rem .4rem 0 0;box-shadow:0 0 18px hsl(270 90% 65% / .35)"></div>
+            <div style="width:100%;height:{{ month.height }}%;background:var(--gradient-primary);border-radius:.4rem .4rem 0 0"></div>
           </div>
           <span class="text-xs muted">{{ month.label }}</span>
         </div>
