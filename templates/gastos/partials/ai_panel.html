@@ -11,19 +11,22 @@
     </div>
   </div>
 
-  {% if insights %}
-    {% for insight in insights %}
-      <div class="ai-card {{ insight.kind }}">
-        <p class="text-xs muted">{{ insight.label }}</p>
-        <p class="text-sm mt-2">{{ insight.text }}</p>
-      </div>
-    {% endfor %}
-  {% else %}
-    <div class="ai-card goal">
-      <p class="text-xs muted">🎯 Objetivo</p>
-      <p class="text-sm mt-2">Seu objetivo é {{ current_user.goal|default:'controlar gastos'|lower }}. Os insights serão ajustados conforme seus lançamentos.</p>
-    </div>
-  {% endif %}
+  <div class="ai-card alert-t">
+    <p class="text-xs muted">⚠️ Alerta</p>
+    <p class="text-sm mt-2">Seus gastos com lazer estão 38% acima da sua média mensal.</p>
+  </div>
+  <div class="ai-card tip">
+    <p class="text-xs muted">💡 Dica</p>
+    <p class="text-sm mt-2">Você pode economizar R$ 230 reduzindo despesas supérfluas como streaming duplicado.</p>
+  </div>
+  <div class="ai-card goal">
+    <p class="text-xs muted">🎯 Objetivo</p>
+    <p class="text-sm mt-2">Seu objetivo é {{ current_user.goal|default:'controlar gastos'|lower }}. Os insights serão ajustados conforme seus lançamentos.</p>
+  </div>
+  <div class="ai-card positive">
+    <p class="text-xs muted">✅ Bom sinal</p>
+    <p class="text-sm mt-2">Seus gastos essenciais estão dentro do esperado: 52% da renda.</p>
+  </div>
 
   <div class="divider"></div>
   <p class="text-xs muted">Os insights são atualizados conforme você adiciona despesas.</p>
