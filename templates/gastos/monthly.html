@@ -30,6 +30,16 @@
     <h1 class="font-display text-3xl font-bold">Entrada Mensal</h1>
     <p class="muted mt-2">Configure sua renda e revise os gastos de {{ current_month }}.</p>
   </div>
+  {% if messages %}
+    <div class="mb-4">
+      {% for message in messages %}
+        <div class="form-alert" role="alert" aria-live="polite">
+          <span class="form-alert-icon">!</span>
+          <p>{{ message }}</p>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
   <div class="grid g2">
     <form class="glass-strong" action="{% url 'gastos:monthly' %}" method="post">
       {% csrf_token %}
@@ -49,6 +59,13 @@
       <div class="flex justify-between" style="padding:.5rem 0;border-bottom:1px solid hsl(0 0% 100% / .06)"><span class="muted">Saldo</span><span class="font-bold text-gradient">{{ balance_display }}</span></div>
       <div class="flex justify-between" style="padding:.5rem 0"><span class="muted">% comprometida</span><span class="font-bold">{{ committed }}%</span></div>
       <div class="bar-track mt-4"><div class="bar-fill" style="width:{{ committed }}%"></div></div>
+      {% if income %}
+        <form action="{% url 'gastos:delete_monthly_income' %}" method="post" class="mt-6" onsubmit="return confirm('Excluir a entrada mensal deste mês? As despesas cadastradas serão mantidas.');">
+          {% csrf_token %}
+          <input type="hidden" name="reference_month" value="{{ current_month_input }}" />
+          <button type="submit" class="btn btn-danger" style="width:100%">Excluir entrada mensal</button>
+        </form>
+      {% endif %}
     </div>
   </div>
   <div class="glass mt-4">
@@ -59,9 +76,9 @@
     <div style="overflow-x:auto">
       <table style="width:100%;border-collapse:collapse;font-size:.92rem">
         <thead><tr style="text-align:left;border-bottom:1px solid hsl(0 0% 100% / .08);color:hsl(var(--muted-foreground));font-size:.78rem;text-transform:uppercase;letter-spacing:.05em">
-          <th style="padding:.7rem .5rem">Despesa</th><th style="padding:.7rem .5rem">Categoria</th><th style="padding:.7rem .5rem;text-align:right">Valor</th>
+          <th style="padding:.7rem .5rem">Despesa</th><th style="padding:.7rem .5rem">Categoria</th><th style="padding:.7rem .5rem;text-align:right">Valor</th><th style="padding:.7rem .5rem;text-align:right">Ações</th>
         </tr></thead>
-        <tbody>{% for expense in expenses %}<tr><td style="padding:.7rem .5rem">{{ expense.name }}</td><td style="padding:.7rem .5rem"><span class="chip">{{ expense.category }}</span></td><td style="padding:.7rem .5rem;text-align:right;font-weight:600">{{ expense.amount_display }}</td></tr>{% empty %}<tr><td colspan="3" style="padding:1rem .5rem;text-align:center" class="muted">Nenhuma despesa registrada ainda.</td></tr>{% endfor %}</tbody>
+        <tbody>{% for expense in expenses %}<tr><td style="padding:.7rem .5rem">{{ expense.name }}</td><td style="padding:.7rem .5rem"><span class="chip">{{ expense.category }}</span></td><td style="padding:.7rem .5rem;text-align:right;font-weight:600">{{ expense.amount_display }}</td><td style="padding:.7rem .5rem;text-align:right"><form action="{% url 'gastos:delete_expense' expense.id %}" method="post" onsubmit="return confirm('Excluir esta despesa?');">{% csrf_token %}<button type="submit" class="btn btn-danger btn-sm">Excluir</button></form></td></tr>{% empty %}<tr><td colspan="4" style="padding:1rem .5rem;text-align:center" class="muted">Nenhuma despesa registrada ainda.</td></tr>{% endfor %}</tbody>
       </table>
     </div>
   </div>

@@ -17,6 +17,16 @@
     <div class="glass-strong" style="padding:2rem">
       <h1 class="font-display text-2xl font-bold text-center">Bem-vindo de volta</h1>
       <p class="text-sm muted text-center mt-2">Entre na sua conta para continuar</p>
+      {% if messages %}
+        <div class="form-alert mt-4" role="alert" aria-live="polite">
+          <span class="form-alert-icon">!</span>
+          <div>
+            {% for message in messages %}
+              <p>{{ message }}</p>
+            {% endfor %}
+          </div>
+        </div>
+      {% endif %}
       <form action="{% url 'gastos:login' %}" method="post" style="margin-top:2rem">
         {% csrf_token %}
         <label class="label">E-mail</label>
