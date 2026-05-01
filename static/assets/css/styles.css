@@ -157,6 +157,9 @@ input,select,textarea{font-family:inherit;color:inherit}
 .ai-card.tip{border-color:hsl(var(--accent) / .3);background:hsl(var(--accent) / .06)}
 .ai-card.goal{border-color:hsl(var(--primary) / .3);background:hsl(var(--primary) / .06)}
 .ai-card.positive{border-color:hsl(150 80% 50% / .3);background:hsl(150 80% 40% / .06)}
+.ai-insight-list{display:grid;gap:.65rem;margin:.75rem 0 0;padding:0;list-style:none}
+.ai-insight-list li{position:relative;padding-left:1rem;line-height:1.45}
+.ai-insight-list li::before{content:"";position:absolute;left:0;top:.62em;width:5px;height:5px;border-radius:50%;background:hsl(var(--accent))}
 .close-x{position:absolute;top:1rem;right:1rem;width:32px;height:32px;border-radius:.5rem;display:grid;place-items:center}
 .close-x:hover{background:hsl(0 0% 100% / .08)}
 

@@ -484,7 +484,7 @@ def ai_financial_insight(request):
     reference_month = month_from_input(request.POST.get('month') or request.GET.get('month'))
     prompt = request.POST.get(
         'prompt',
-        'Analise se os gastos do mes estao alinhados ao objetivo financeiro do usuario e gere uma acao pratica curta.',
+        'Analise se os gastos do mes estao alinhados ao objetivo financeiro do usuario. Responda em ate 4 topicos curtos, cada um iniciado por "-": situacao, alinhamento, ponto de atencao e acao pratica.',
     )
     try:
         insight = gerar_resposta_financeira(

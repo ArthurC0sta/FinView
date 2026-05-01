@@ -1,5 +1,39 @@
 
 // AI panel toggle
+function renderAIInsight(target, message){
+  const text = (message || 'Nao foi possivel gerar um insight agora.').trim();
+  const normalized = text.replace(/\s+\*\s+/g, '\n- ').replace(/\s+-\s+/g, '\n- ');
+  let items = normalized
+    .split(/\n+/)
+    .map(item => item.replace(/^[-*]\s*/, '').trim())
+    .filter(Boolean);
+
+  if(items.length <= 1 && text.length > 140){
+    items = text
+      .split(/(?<=[.!?])\s+/)
+      .map(item => item.trim())
+      .filter(Boolean)
+      .slice(0, 4);
+  }
+
+  target.textContent = '';
+  if(items.length > 1){
+    const list = document.createElement('ul');
+    list.className = 'ai-insight-list';
+    items.forEach(item => {
+      const li = document.createElement('li');
+      li.textContent = item;
+      list.appendChild(li);
+    });
+    target.appendChild(list);
+    return;
+  }
+
+  const paragraph = document.createElement('p');
+  paragraph.textContent = items[0] || text;
+  target.appendChild(paragraph);
+}
+
 function setupAI(){
   const panel = document.getElementById('aiPanel');
   const toggle = document.getElementById('aiToggle');
@@ -12,7 +46,7 @@ function setupAI(){
     requestedInsight = true;
     const body = new URLSearchParams({
       month: panel.dataset.month || '',
-      prompt: 'Analise se os gastos do mes estao alinhados ao objetivo financeiro do usuario e gere uma acao pratica curta.'
+      prompt: 'Analise se os gastos do mes estao alinhados ao objetivo financeiro do usuario. Responda em ate 4 topicos curtos, cada um iniciado por "-": situacao, alinhamento, ponto de atencao e acao pratica.'
     });
     fetch(panel.dataset.aiUrl, {
       method: 'POST',
@@ -24,7 +58,7 @@ function setupAI(){
     })
       .then(response => response.json())
       .then(data => {
-        insight.textContent = data.message || 'Nao foi possivel gerar um insight agora.';
+        renderAIInsight(insight, data.message);
       })
       .catch(() => {
         insight.textContent = 'Nao foi possivel consultar a IA agora.';
