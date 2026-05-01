@@ -45,7 +45,7 @@
       {% csrf_token %}
       <h3 class="font-display font-semibold text-lg mb-4">Renda do mês</h3>
       <label class="label">Renda total (R$)</label>
-      <input class="input money-input" name="income_amount" type="text" inputmode="decimal" autocomplete="off" placeholder="0,00" value="{{ income_amount|default:'0.00' }}" required />
+      <input class="input money-input" name="income_amount" type="text" inputmode="decimal" autocomplete="off" placeholder="0,00" value="{{ income_amount|default:'' }}" required />
       <label class="label mt-4">Tipo de renda</label>
       <select class="select" name="income_type"><option value="fixed">Salário fixo</option><option value="variable">Freelance / Variável</option></select>
       <label class="label mt-4">Mês de referência</label>
@@ -97,5 +97,5 @@
 
 {% include 'gastos/partials/ai_panel.html' %}
 
-<script src="{% static 'assets/js/app.js' %}"></script>
+<script src="{% static 'assets/js/app.js' %}?v=20260501-money-mask"></script>
 </body></html>

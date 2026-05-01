@@ -40,5 +40,5 @@
   const goalInput=document.querySelector('#goal-input');
   opts.forEach(o=>o.addEventListener('click',()=>{if(active){active.style.borderColor='hsl(0 0% 100% / .10)';active.style.background='hsl(0 0% 100% / .04)'}active=o;o.style.borderColor='hsl(var(--primary))';o.style.background='hsl(var(--primary) / .12)';if(goalInput){goalInput.value=o.dataset.goal || o.textContent.trim()}}));
 </script>
-<script src="{% static 'assets/js/app.js' %}"></script>
+<script src="{% static 'assets/js/app.js' %}?v=20260501-money-mask"></script>
 </body></html>

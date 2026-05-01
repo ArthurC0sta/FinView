@@ -89,7 +89,9 @@ function moneyToNumber(value){
 }
 
 function formatMoneyBR(value){
-  const numberValue = Number(moneyToNumber(value));
+  const normalized = moneyToNumber(value);
+  if(!normalized) return '';
+  const numberValue = Number(normalized);
   if(!Number.isFinite(numberValue)) return '';
   return numberValue.toLocaleString('pt-BR', {
     minimumFractionDigits: 2,
@@ -97,16 +99,27 @@ function formatMoneyBR(value){
   });
 }
 
+function formatMoneyInput(input){
+  const formatted = formatMoneyBR(input.value);
+  if(formatted){
+    input.value = formatted;
+  }
+}
+
 function setupTypingQuality(){
   document.querySelectorAll('.money-input').forEach(input => {
+    let moneyTimer;
     input.addEventListener('input', () => {
       input.value = input.value.replace(/[^\d,.]/g, '');
+      window.clearTimeout(moneyTimer);
+      moneyTimer = window.setTimeout(() => {
+        formatMoneyInput(input);
+      }, 550);
     });
-    input.addEventListener('blur', () => {
-      input.value = formatMoneyBR(input.value);
-    });
+    input.addEventListener('blur', () => formatMoneyInput(input));
+    input.addEventListener('change', () => formatMoneyInput(input));
     if(input.value){
-      input.value = formatMoneyBR(input.value);
+      formatMoneyInput(input);
     }
     input.form && input.form.addEventListener('submit', () => {
       input.value = moneyToNumber(input.value);
