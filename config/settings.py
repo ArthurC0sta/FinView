@@ -21,6 +21,7 @@ env = environ.Env(
     DEBUG=(bool, False),
     ALLOWED_HOSTS=(list, []),
     CSRF_TRUSTED_ORIGINS=(list, []),
+    GROQ_MODEL=(str, 'llama-3.3-70b-versatile'),
 )
 environ.Env.read_env(BASE_DIR / '.env')
 
@@ -165,3 +166,6 @@ SECURE_HSTS_PRELOAD = env.bool('SECURE_HSTS_PRELOAD', default=not DEBUG)
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+GROQ_API_KEY = env('GROQ_API_KEY', default=env('API_KEY', default=''))
+GROQ_MODEL = env('GROQ_MODEL')

@@ -15,7 +15,7 @@
   
 <aside class="sidebar">
   <div class="brand"><a href="{% url 'gastos:landing' %}" class="logo"><span class="dot">F</span><span>FinView <span class="text-gradient">AI</span></span></a></div>
-  <a href="{% url 'gastos:dashboard' %}" class="nav-item "><span>📊</span>Dashboard</a>
+  <a href="{% url 'gastos:dashboard' %}?month={{ current_month_input }}" class="nav-item "><span>📊</span>Dashboard</a>
 <a href="{% url 'gastos:monthly' %}?month={{ current_month_input }}" class="nav-item active"><span>📅</span>Mensal</a>
 <a href="{% url 'gastos:new_expense' %}?month={{ current_month_input }}" class="nav-item "><span>🧾</span>Nova despesa</a>
 <a href="{% url 'gastos:profile' %}" class="nav-item "><span>👤</span>Perfil</a>
@@ -47,7 +47,7 @@
       <label class="label">Renda total (R$)</label>
       <input class="input money-input" name="income_amount" type="text" inputmode="decimal" autocomplete="off" placeholder="0,00" value="{{ income_amount|default:'0.00' }}" required />
       <label class="label mt-4">Tipo de renda</label>
-      <select class="select" name="income_type"><option value="fixed" {% if income.income_type == 'fixed' %}selected{% endif %}>Salário fixo</option><option value="variable" {% if income.income_type == 'variable' %}selected{% endif %}>Freelance / Variável</option><option value="mixed" {% if income.income_type == 'mixed' %}selected{% endif %}>Misto</option></select>
+      <select class="select" name="income_type"><option value="fixed">Salário fixo</option><option value="variable">Freelance / Variável</option></select>
       <label class="label mt-4">Mês de referência</label>
       <input class="input" name="reference_month" type="month" value="{{ current_month_input }}" />
       <button class="btn btn-primary mt-6" style="width:100%">Salvar entrada mensal</button>
@@ -55,15 +55,16 @@
     <div class="glass">
       <h3 class="font-display font-semibold text-lg mb-4">Resumo</h3>
       <div class="flex justify-between" style="padding:.5rem 0;border-bottom:1px solid hsl(0 0% 100% / .06)"><span class="muted">Renda</span><span class="font-bold">{{ income_amount_display }}</span></div>
+      <div class="flex justify-between" style="padding:.5rem 0;border-bottom:1px solid hsl(0 0% 100% / .06)"><span class="muted">Entradas</span><span class="font-bold">{{ income_count }}</span></div>
       <div class="flex justify-between" style="padding:.5rem 0;border-bottom:1px solid hsl(0 0% 100% / .06)"><span class="muted">Gastos</span><span class="font-bold">{{ total_expenses_display }}</span></div>
       <div class="flex justify-between" style="padding:.5rem 0;border-bottom:1px solid hsl(0 0% 100% / .06)"><span class="muted">Saldo</span><span class="font-bold text-gradient">{{ balance_display }}</span></div>
       <div class="flex justify-between" style="padding:.5rem 0"><span class="muted">% comprometida</span><span class="font-bold">{{ committed }}%</span></div>
       <div class="bar-track mt-4"><div class="bar-fill" style="width:{{ committed }}%"></div></div>
-      {% if income %}
+      {% if income_count %}
         <form action="{% url 'gastos:delete_monthly_income' %}" method="post" class="mt-6" onsubmit="return confirm('Excluir a entrada mensal deste mês? As despesas cadastradas serão mantidas.');">
           {% csrf_token %}
           <input type="hidden" name="reference_month" value="{{ current_month_input }}" />
-          <button type="submit" class="btn btn-danger" style="width:100%">Excluir entrada mensal</button>
+          <button type="submit" class="btn btn-danger" style="width:100%">Excluir entradas do mês</button>
         </form>
       {% endif %}
     </div>
@@ -85,32 +86,16 @@
         <thead><tr style="text-align:left;border-bottom:1px solid hsl(0 0% 100% / .08);color:hsl(var(--muted-foreground));font-size:.78rem;text-transform:uppercase;letter-spacing:.05em">
           <th style="padding:.7rem .5rem">Despesa</th><th style="padding:.7rem .5rem">Categoria</th><th style="padding:.7rem .5rem">Data</th><th style="padding:.7rem .5rem;text-align:right">Valor</th><th style="padding:.7rem .5rem;text-align:right">Ações</th>
         </tr></thead>
-        <tbody>{% for expense in expenses %}<tr><td style="padding:.7rem .5rem">{{ expense.name }}</td><td style="padding:.7rem .5rem"><span class="chip">{{ expense.category }}</span></td><td style="padding:.7rem .5rem" class="muted">{{ expense.date|date:"d/m/Y" }}</td><td style="padding:.7rem .5rem;text-align:right;font-weight:600">{{ expense.amount_display }}</td><td style="padding:.7rem .5rem;text-align:right"><form action="{% url 'gastos:delete_expense' expense.id %}" method="post" onsubmit="return confirm('Excluir esta despesa?');">{% csrf_token %}{% if show_all_expenses %}<input type="hidden" name="return_to_all" value="1" />{% endif %}<button type="submit" class="btn btn-danger btn-sm">Excluir</button></form></td></tr>{% empty %}<tr><td colspan="5" style="padding:1rem .5rem;text-align:center" class="muted">Nenhuma despesa registrada ainda.</td></tr>{% endfor %}</tbody>
+        <tbody>{% for expense in expenses %}<tr><td style="padding:.7rem .5rem">{{ expense.name }}</td><td style="padding:.7rem .5rem"><span class="chip">{{ expense.category }}</span></td><td style="padding:.7rem .5rem" class="muted">{{ expense.date|date:"d/m/Y" }}</td><td style="padding:.7rem .5rem;text-align:right;font-weight:600">{{ expense.amount_display }}</td><td style="padding:.7rem .5rem;text-align:right"><div class="flex gap-2" style="justify-content:flex-end;flex-wrap:wrap"><a href="{% url 'gastos:edit_expense' expense.id %}" class="btn btn-outline btn-sm">Editar</a><form action="{% url 'gastos:delete_expense' expense.id %}" method="post" onsubmit="return confirm('Excluir esta despesa?');">{% csrf_token %}{% if show_all_expenses %}<input type="hidden" name="return_to_all" value="1" />{% endif %}<button type="submit" class="btn btn-danger btn-sm">Excluir</button></form></div></td></tr>{% empty %}<tr><td colspan="5" style="padding:1rem .5rem;text-align:center" class="muted">Nenhuma despesa registrada ainda.</td></tr>{% endfor %}</tbody>
       </table>
     </div>
   </div>
 </div>
 </main>
 </div>
-<nav class="mobile-nav"><a href="{% url 'gastos:dashboard' %}" class=""><span style="font-size:1.1rem">📊</span>Dashboard</a><a href="{% url 'gastos:monthly' %}?month={{ current_month_input }}" class="active"><span style="font-size:1.1rem">📅</span>Mensal</a><a href="{% url 'gastos:new_expense' %}?month={{ current_month_input }}" class=""><span style="font-size:1.1rem">🧾</span>Gasto</a><a href="{% url 'gastos:profile' %}" class=""><span style="font-size:1.1rem">👤</span>Perfil</a></nav>
+<nav class="mobile-nav"><a href="{% url 'gastos:dashboard' %}?month={{ current_month_input }}" class=""><span style="font-size:1.1rem">📊</span>Dashboard</a><a href="{% url 'gastos:monthly' %}?month={{ current_month_input }}" class="active"><span style="font-size:1.1rem">📅</span>Mensal</a><a href="{% url 'gastos:new_expense' %}?month={{ current_month_input }}" class=""><span style="font-size:1.1rem">🧾</span>Gasto</a><a href="{% url 'gastos:profile' %}" class=""><span style="font-size:1.1rem">👤</span>Perfil</a></nav>
 
-<button id="aiToggle" class="ai-toggle" aria-label="Abrir IA">✨</button>
-<aside id="aiPanel" class="ai-panel" style="position:fixed">
-  <button id="aiClose" class="close-x" aria-label="Fechar">✕</button>
-  <div class="flex items-center gap-3 mb-4">
-    <div class="kpi-icon" style="width:38px;height:38px">✨</div>
-    <div>
-      <h3 class="font-display font-semibold">FinView AI</h3>
-      <p class="text-xs muted">Análises personalizadas</p>
-    </div>
-  </div>
-  <div class="ai-card alert-t"><p class="text-xs muted">⚠️ Alerta</p><p class="text-sm mt-2">Seus gastos com lazer estão 38% acima da sua média mensal.</p></div>
-<div class="ai-card tip"><p class="text-xs muted">💡 Dica</p><p class="text-sm mt-2">Você pode economizar R$ 230 reduzindo despesas supérfluas como streaming duplicado.</p></div>
-<div class="ai-card goal"><p class="text-xs muted">🎯 Objetivo</p><p class="text-sm mt-2">Seu objetivo é {{ user.goal|lower }} — os insights serão ajustados conforme seus lançamentos.</p></div>
-<div class="ai-card positive"><p class="text-xs muted">✅ Bom sinal</p><p class="text-sm mt-2">Seus gastos essenciais estão dentro do esperado (52% da renda).</p></div>
-  <div class="divider"></div>
-  <p class="text-xs muted">Os insights são atualizados conforme você adiciona despesas.</p>
-</aside>
+{% include 'gastos/partials/ai_panel.html' %}
 
 <script src="{% static 'assets/js/app.js' %}"></script>
 </body></html>

@@ -1,6 +1,6 @@
 <button id="aiToggle" class="ai-toggle" aria-label="Abrir IA">✨</button>
 
-<aside id="aiPanel" class="ai-panel">
+<aside id="aiPanel" class="ai-panel" data-ai-url="{% url 'gastos:ai_financial_insight' %}" data-month="{{ current_month_input }}" data-csrf="{{ csrf_token }}">
   <button id="aiClose" class="close-x" aria-label="Fechar">✕</button>
 
   <div class="flex items-center gap-3 mb-4">
@@ -16,8 +16,8 @@
     <p class="text-sm mt-2">Seus gastos com lazer estão 38% acima da sua média mensal.</p>
   </div>
   <div class="ai-card tip">
-    <p class="text-xs muted">💡 Dica</p>
-    <p class="text-sm mt-2">Você pode economizar R$ 230 reduzindo despesas supérfluas como streaming duplicado.</p>
+    <p class="text-xs muted">💡 Análise gerada por IA</p>
+    <p id="aiInsightText" class="text-sm mt-2">Abrindo a IA para analisar seus lançamentos...</p>
   </div>
   <div class="ai-card goal">
     <p class="text-xs muted">🎯 Objetivo</p>

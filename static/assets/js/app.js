@@ -4,8 +4,36 @@ function setupAI(){
   const panel = document.getElementById('aiPanel');
   const toggle = document.getElementById('aiToggle');
   const close = document.getElementById('aiClose');
+  const insight = document.getElementById('aiInsightText');
   if(!panel) return;
-  toggle && toggle.addEventListener('click', ()=>panel.classList.add('open'));
+  let requestedInsight = false;
+  const loadInsight = () => {
+    if(requestedInsight || !insight || !panel.dataset.aiUrl) return;
+    requestedInsight = true;
+    const body = new URLSearchParams({
+      month: panel.dataset.month || '',
+      prompt: 'Analise se os gastos do mes estao alinhados ao objetivo financeiro do usuario e gere uma acao pratica curta.'
+    });
+    fetch(panel.dataset.aiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'X-CSRFToken': panel.dataset.csrf || ''
+      },
+      body
+    })
+      .then(response => response.json())
+      .then(data => {
+        insight.textContent = data.message || 'Nao foi possivel gerar um insight agora.';
+      })
+      .catch(() => {
+        insight.textContent = 'Nao foi possivel consultar a IA agora.';
+      });
+  };
+  toggle && toggle.addEventListener('click', ()=>{
+    panel.classList.add('open');
+    loadInsight();
+  });
   close && close.addEventListener('click', ()=>panel.classList.remove('open'));
 }
 

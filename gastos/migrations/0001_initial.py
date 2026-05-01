@@ -23,7 +23,7 @@ class Migration(migrations.Migration):
                 ('date', models.DateField()),
                 ('category', models.CharField(max_length=60)),
                 ('recurrence', models.CharField(choices=[('fixed', 'Fixa'), ('variable', 'Variável')], default='variable', max_length=20)),
-                ('priority', models.CharField(choices=[('essential', 'Essencial'), ('important', 'Importante'), ('superfluous', 'Supérflua')], default='essential', max_length=20)),
+                ('priority', models.CharField(choices=[('essential', 'Essencial'), ('important', 'Importante'), ('superfluous', 'Dispensável')], default='essential', max_length=20)),
                 ('notes', models.TextField(blank=True)),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('updated_at', models.DateTimeField(auto_now=True)),
@@ -46,7 +46,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('amount', models.DecimalField(decimal_places=2, max_digits=10)),
-                ('income_type', models.CharField(choices=[('fixed', 'Salário fixo'), ('variable', 'Freelance / Variável'), ('mixed', 'Misto')], default='fixed', max_length=20)),
+                ('income_type', models.CharField(choices=[('fixed', 'Salário fixo'), ('variable', 'Freelance / Variável')], default='fixed', max_length=20)),
                 ('reference_month', models.DateField()),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('updated_at', models.DateTimeField(auto_now=True)),
@@ -54,7 +54,6 @@ class Migration(migrations.Migration):
             ],
             options={
                 'ordering': ['-reference_month'],
-                'unique_together': {('user', 'reference_month')},
             },
         ),
     ]

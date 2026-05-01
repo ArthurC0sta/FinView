@@ -16,7 +16,6 @@ class MonthlyIncome(models.Model):
     INCOME_TYPES = [
         ('fixed', 'Salário fixo'),
         ('variable', 'Freelance / Variável'),
-        ('mixed', 'Misto'),
     ]
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='monthly_incomes')
@@ -27,7 +26,6 @@ class MonthlyIncome(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        unique_together = ('user', 'reference_month')
         ordering = ['-reference_month']
 
     def __str__(self):
@@ -42,7 +40,7 @@ class Expense(models.Model):
     PRIORITY_CHOICES = [
         ('essential', 'Essencial'),
         ('important', 'Importante'),
-        ('superfluous', 'Supérflua'),
+        ('superfluous', 'Dispensável'),
     ]
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='expenses')

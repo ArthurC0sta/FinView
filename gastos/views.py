@@ -1,14 +1,17 @@
+import calendar
 from decimal import Decimal, InvalidOperation
 
 from django.contrib import messages
 from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
 from django.contrib.auth.models import User
 from django.db.models import Sum
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
+from .ia import gerar_resposta_financeira, groq_configured
 from .models import Expense, MonthlyIncome
 
 
@@ -113,10 +116,49 @@ def monthly_all_url(reference_month):
     return f'{monthly_url(reference_month)}&view=all'
 
 
-def previous_month(value):
-    if value.month == 1:
-        return value.replace(year=value.year - 1, month=12, day=1)
-    return value.replace(month=value.month - 1, day=1)
+def expense_months_with_records(user, limit=6):
+    months = [
+        value.replace(day=1)
+        for value in Expense.objects.filter(user=user).dates('date', 'month', order='ASC')
+    ]
+    if limit and len(months) > limit:
+        return months[-limit:]
+    return months
+
+
+def date_for_month(reference_month, source_day):
+    last_day = calendar.monthrange(reference_month.year, reference_month.month)[1]
+    return reference_month.replace(day=min(source_day, last_day))
+
+
+def ensure_fixed_expenses_for_month(user, reference_month):
+    month_start = reference_month.replace(day=1)
+    fixed_sources = Expense.objects.filter(user=user, recurrence='fixed', date__lt=month_start).order_by('date')
+    created = 0
+    for source in fixed_sources:
+        target_date = date_for_month(reference_month, source.date.day)
+        exists = Expense.objects.filter(
+            user=user,
+            recurrence='fixed',
+            name=source.name,
+            amount=source.amount,
+            category=source.category,
+            date=target_date,
+        ).exists()
+        if exists:
+            continue
+        Expense.objects.create(
+            user=user,
+            name=source.name,
+            amount=source.amount,
+            date=target_date,
+            category=source.category,
+            recurrence='fixed',
+            priority=source.priority,
+            notes=source.notes,
+        )
+        created += 1
+    return created
 
 
 def money(value):
@@ -194,6 +236,40 @@ def dashboard_alert(committed, balance):
         'title': 'Comece registrando dados',
         'message': 'Cadastre sua renda mensal e suas despesas para liberar uma leitura mais fiel do dashboard.',
     }
+
+
+def ai_context_for_month(user, reference_month):
+    goal = user.profile.goal if hasattr(user, 'profile') else 'Controlar gastos'
+    expenses = Expense.objects.filter(user=user, date__year=reference_month.year, date__month=reference_month.month)
+    total_expenses = expenses.aggregate(total=Sum('amount'))['total'] or Decimal('0')
+    income_amount = MonthlyIncome.objects.filter(user=user, reference_month=reference_month).aggregate(total=Sum('amount'))['total'] or Decimal('0')
+    balance = income_amount - total_expenses
+    category_items = expenses.values('category').annotate(total=Sum('amount')).order_by('-total')
+    priority_labels = dict(Expense.PRIORITY_CHOICES)
+    priority_items = expenses.values('priority').annotate(total=Sum('amount')).order_by('-total')
+
+    categories = ', '.join(
+        f"{item['category']}: {money(item['total'] or Decimal('0'))}"
+        for item in category_items
+    ) or 'sem despesas por categoria'
+    priorities = ', '.join(
+        f"{priority_labels.get(item['priority'], item['priority'])}: {money(item['total'] or Decimal('0'))}"
+        for item in priority_items
+    ) or 'sem despesas por prioridade'
+
+    return '\n'.join(
+        [
+            f'Usuario: {user.get_full_name() or default_user_from_email(user.email)}',
+            f'Objetivo financeiro: {goal}',
+            f'Mes de referencia: {month_label(reference_month)}',
+            f'Renda cadastrada: {money(income_amount)}',
+            f'Total de despesas: {money(total_expenses)}',
+            f'Saldo: {money(balance)}',
+            f'Percentual comprometido: {percent(total_expenses, income_amount)}%',
+            f'Categorias: {categories}',
+            f'Prioridades: {priorities}',
+        ]
+    )
 
 
 def session_user(request):
@@ -298,11 +374,11 @@ def dashboard(request):
     user, response = require_session_user(request)
     if response:
         return response
-    reference_month = current_month_date()
+    reference_month = month_from_input(request.GET.get('month'))
+    ensure_fixed_expenses_for_month(request.user, reference_month)
     expenses = Expense.objects.filter(user=request.user, date__year=reference_month.year, date__month=reference_month.month)
-    income = MonthlyIncome.objects.filter(user=request.user, reference_month=reference_month).first()
     total_expenses = expenses.aggregate(total=Sum('amount'))['total'] or Decimal('0')
-    income_amount = income.amount if income else Decimal('0')
+    income_amount = MonthlyIncome.objects.filter(user=request.user, reference_month=reference_month).aggregate(total=Sum('amount'))['total'] or Decimal('0')
     balance = income_amount - total_expenses
     committed = percent(total_expenses, income_amount)
     score = score_from_commitment(committed)
@@ -344,18 +420,13 @@ def dashboard(request):
             stops.append(f"{category['color']} {offset}% {max(next_offset, offset + 1)}%")
             offset = next_offset
         category_gradient = f"conic-gradient({', '.join(stops)})"
-    history_months = []
-    cursor = reference_month
-    for _ in range(6):
-        history_months.append(cursor)
-        cursor = previous_month(cursor)
-    history_months.reverse()
+    history_months = expense_months_with_records(request.user)
     history_totals = []
     for item_month in history_months:
+        ensure_fixed_expenses_for_month(request.user, item_month)
         month_expenses = Expense.objects.filter(user=request.user, date__year=item_month.year, date__month=item_month.month)
-        month_income = MonthlyIncome.objects.filter(user=request.user, reference_month=item_month).first()
         month_total = month_expenses.aggregate(total=Sum('amount'))['total'] or Decimal('0')
-        month_income_amount = month_income.amount if month_income else Decimal('0')
+        month_income_amount = MonthlyIncome.objects.filter(user=request.user, reference_month=item_month).aggregate(total=Sum('amount'))['total'] or Decimal('0')
         history_totals.append((item_month, month_total, month_income_amount))
     max_history_expense = max([item[1] for item in history_totals] + [Decimal('1')])
     monthly_history = [
@@ -364,9 +435,11 @@ def dashboard(request):
             'expenses_display': money(month_total),
             'income_display': money(month_income_amount),
             'balance_display': money(month_income_amount - month_total),
-            'height': max(6, clamp(int((month_total / max_history_expense) * 100))) if month_total else 6,
+            'has_expenses': month_total > 0,
+            'height': clamp(int((month_total / max_history_expense) * 100)) if month_total else 0,
         }
         for item_month, month_total, month_income_amount in history_totals
+        if month_total > 0
     ]
     return render_page(
         request,
@@ -381,6 +454,8 @@ def dashboard(request):
         income_amount_display=money(income_amount),
         total_expenses_display=money(total_expenses),
         balance_display=money(balance),
+        current_month=month_label(reference_month),
+        current_month_input=month_input(reference_month),
         committed=committed,
         committed_bar=clamp(committed),
         score=score,
@@ -392,31 +467,66 @@ def dashboard(request):
     )
 
 
+@require_POST
+def ai_financial_insight(request):
+    user, response = require_session_user(request)
+    if response:
+        return JsonResponse({'ok': False, 'message': 'Faça login para usar a IA.'}, status=401)
+    if not groq_configured():
+        return JsonResponse(
+            {
+                'ok': False,
+                'message': 'Configure API_KEY ou GROQ_API_KEY no arquivo .env para ativar a IA.',
+            },
+            status=503,
+        )
+
+    reference_month = month_from_input(request.POST.get('month') or request.GET.get('month'))
+    prompt = request.POST.get(
+        'prompt',
+        'Analise se os gastos do mes estao alinhados ao objetivo financeiro do usuario e gere uma acao pratica curta.',
+    )
+    try:
+        insight = gerar_resposta_financeira(
+            prompt,
+            ai_context_for_month(request.user, reference_month),
+        )
+    except Exception:
+        return JsonResponse(
+            {
+                'ok': False,
+                'message': 'Nao foi possivel consultar a IA agora. Tente novamente em instantes.',
+            },
+            status=502,
+        )
+
+    return JsonResponse({'ok': True, 'message': insight})
+
+
 def monthly(request):
     user, response = require_session_user(request)
     if response:
         return response
     if request.method == 'POST':
         reference_month = month_from_input(request.POST.get('reference_month'))
-        MonthlyIncome.objects.update_or_create(
+        MonthlyIncome.objects.create(
             user=request.user,
             reference_month=reference_month,
-            defaults={
-                'amount': decimal_from_post(request.POST.get('income_amount')),
-                'income_type': request.POST.get('income_type', 'fixed'),
-            },
+            amount=decimal_from_post(request.POST.get('income_amount')),
+            income_type=request.POST.get('income_type', 'fixed'),
         )
         return redirect(monthly_url(reference_month))
 
     reference_month = month_from_input(request.GET.get('month'))
-    income = MonthlyIncome.objects.filter(user=request.user, reference_month=reference_month).first()
+    ensure_fixed_expenses_for_month(request.user, reference_month)
+    income_entries = MonthlyIncome.objects.filter(user=request.user, reference_month=reference_month)
     monthly_expenses = Expense.objects.filter(user=request.user, date__year=reference_month.year, date__month=reference_month.month)
     show_all_expenses = request.GET.get('view') == 'all'
     listed_expenses = Expense.objects.filter(user=request.user) if show_all_expenses else monthly_expenses
     total_expenses = monthly_expenses.aggregate(total=Sum('amount'))['total'] or Decimal('0')
     all_expenses_count = Expense.objects.filter(user=request.user).count()
     listed_expenses_count = listed_expenses.count()
-    income_amount = income.amount if income else Decimal('0')
+    income_amount = income_entries.aggregate(total=Sum('amount'))['total'] or Decimal('0')
     balance = income_amount - total_expenses
     committed = int((total_expenses / income_amount) * 100) if income_amount else 0
     return render_page(
@@ -425,7 +535,8 @@ def monthly(request):
         active_page='monthly',
         user=user,
         expenses=listed_expenses,
-        income=income,
+        income_entries=income_entries,
+        income_count=income_entries.count(),
         income_amount=income_amount,
         income_amount_display=money(income_amount),
         current_month=month_label(reference_month),
@@ -479,6 +590,37 @@ def new_expense(request):
         current_month=month_label(reference_month),
         current_month_input=month_input(reference_month),
         current_date_input=reference_month.isoformat(),
+    )
+
+
+def edit_expense(request, expense_id):
+    user, response = require_session_user(request)
+    if response:
+        return response
+    expense = get_object_or_404(Expense, id=expense_id, user=request.user)
+    if request.method == 'POST':
+        expense_date = date_from_input(request.POST.get('date'))
+        expense.name = request.POST.get('name', '').strip()
+        expense.amount = decimal_from_post(request.POST.get('amount'))
+        expense.date = expense_date
+        expense.category = request.POST.get('category', 'Outros')
+        expense.recurrence = request.POST.get('recurrence', 'variable')
+        expense.priority = request.POST.get('priority', 'essential')
+        expense.notes = request.POST.get('notes', '').strip()
+        expense.save()
+        return redirect(monthly_url(expense_date.replace(day=1)))
+    reference_month = expense.date.replace(day=1)
+    return render_page(
+        request,
+        'gastos/new-expense.html',
+        active_page='new_expense',
+        user=user,
+        edit_mode=True,
+        expense=expense,
+        form_action=reverse('gastos:edit_expense', args=[expense.id]),
+        current_month=month_label(reference_month),
+        current_month_input=month_input(reference_month),
+        current_date_input=expense.date.isoformat(),
     )
 
 
