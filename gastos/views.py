@@ -4,6 +4,7 @@ from decimal import Decimal, InvalidOperation
 from django.contrib import messages
 from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
 from django.contrib.auth.models import User
+from django.db import IntegrityError, transaction
 from django.db.models import Sum
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -467,6 +468,27 @@ def dashboard(request):
     )
 
 
+def add_monthly_income(user, reference_month, amount, income_type):
+    try:
+        with transaction.atomic():
+            return MonthlyIncome.objects.create(
+                user=user,
+                reference_month=reference_month,
+                amount=amount,
+                income_type=income_type,
+            )
+    except IntegrityError:
+        existing_income = MonthlyIncome.objects.filter(
+            user=user,
+            reference_month=reference_month,
+        ).order_by('id').first()
+        if not existing_income:
+            raise
+        existing_income.amount += amount
+        existing_income.save(update_fields=['amount', 'updated_at'])
+        return existing_income
+
+
 @require_POST
 def ai_financial_insight(request):
     user, response = require_session_user(request)
@@ -509,11 +531,11 @@ def monthly(request):
         return response
     if request.method == 'POST':
         reference_month = month_from_input(request.POST.get('reference_month'))
-        MonthlyIncome.objects.create(
-            user=request.user,
-            reference_month=reference_month,
-            amount=decimal_from_post(request.POST.get('income_amount')),
-            income_type=request.POST.get('income_type', 'fixed'),
+        add_monthly_income(
+            request.user,
+            reference_month,
+            decimal_from_post(request.POST.get('income_amount')),
+            request.POST.get('income_type', 'fixed'),
         )
         return redirect(monthly_url(reference_month))
 

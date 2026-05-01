@@ -1,6 +1,7 @@
 from types import SimpleNamespace
 
 from django.contrib.auth.models import User
+from django.db import IntegrityError
 from django.test import TestCase, override_settings
 from django.urls import reverse
 from unittest.mock import patch
@@ -72,3 +73,29 @@ class GroqIntegrationTests(TestCase):
 
         self.assertEqual(response.status_code, 302)
         self.assertEqual(MonthlyIncome.objects.filter(user=user, reference_month=reference_month).count(), 2)
+
+    def test_cadastro_de_renda_soma_valor_se_banco_ainda_tiver_restricao_unica(self):
+        user = User.objects.create_user(username='ana@example.com', email='ana@example.com', password='senha12345')
+        self.client.force_login(user)
+        reference_month = current_month_date()
+        income = MonthlyIncome.objects.create(
+            user=user,
+            reference_month=reference_month,
+            amount='1000.00',
+            income_type='fixed',
+        )
+
+        with patch('gastos.views.MonthlyIncome.objects.create', side_effect=IntegrityError('unique constraint')):
+            response = self.client.post(
+                reverse('gastos:monthly'),
+                {
+                    'reference_month': reference_month.strftime('%Y-%m'),
+                    'income_amount': '500.00',
+                    'income_type': 'variable',
+                },
+            )
+
+        income.refresh_from_db()
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(str(income.amount), '1500.00')
+        self.assertEqual(MonthlyIncome.objects.filter(user=user, reference_month=reference_month).count(), 1)
