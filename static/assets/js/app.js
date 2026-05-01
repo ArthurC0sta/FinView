@@ -71,11 +71,30 @@ function setupAI(){
   close && close.addEventListener('click', ()=>panel.classList.remove('open'));
 }
 
-function normalizeMoney(value){
-  return value
-    .replace(/[^\d,.]/g, '')
-    .replace(/\.(?=\d{3}(?:\D|$))/g, '')
-    .replace(',', '.');
+function moneyToNumber(value){
+  const clean = (value || '').replace(/[^\d,.]/g, '');
+  if(!clean) return '';
+
+  const lastComma = clean.lastIndexOf(',');
+  const lastDot = clean.lastIndexOf('.');
+  const separatorIndex = Math.max(lastComma, lastDot);
+
+  if(separatorIndex >= 0){
+    const integer = clean.slice(0, separatorIndex).replace(/\D/g, '') || '0';
+    const decimal = clean.slice(separatorIndex + 1).replace(/\D/g, '').slice(0, 2).padEnd(2, '0');
+    return `${integer}.${decimal}`;
+  }
+
+  return `${clean.replace(/\D/g, '') || '0'}.00`;
+}
+
+function formatMoneyBR(value){
+  const numberValue = Number(moneyToNumber(value));
+  if(!Number.isFinite(numberValue)) return '';
+  return numberValue.toLocaleString('pt-BR', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
 }
 
 function setupTypingQuality(){
@@ -83,8 +102,14 @@ function setupTypingQuality(){
     input.addEventListener('input', () => {
       input.value = input.value.replace(/[^\d,.]/g, '');
     });
+    input.addEventListener('blur', () => {
+      input.value = formatMoneyBR(input.value);
+    });
+    if(input.value){
+      input.value = formatMoneyBR(input.value);
+    }
     input.form && input.form.addEventListener('submit', () => {
-      input.value = normalizeMoney(input.value);
+      input.value = moneyToNumber(input.value);
     });
   });
 

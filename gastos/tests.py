@@ -6,6 +6,7 @@ from django.urls import reverse
 from unittest.mock import patch
 
 from .ia import gerar_resposta_financeira
+from .models import MonthlyIncome
 from .views import ai_context_for_month, current_month_date
 
 
@@ -48,3 +49,26 @@ class GroqIntegrationTests(TestCase):
         contexto = ai_context_for_month(user, current_month_date())
 
         self.assertIn('Objetivo financeiro: Reduzir dívidas', contexto)
+
+    def test_usuario_pode_cadastrar_multiplas_rendas_no_mes(self):
+        user = User.objects.create_user(username='ana@example.com', email='ana@example.com', password='senha12345')
+        self.client.force_login(user)
+        reference_month = current_month_date()
+
+        MonthlyIncome.objects.create(
+            user=user,
+            reference_month=reference_month,
+            amount='1000.00',
+            income_type='fixed',
+        )
+        response = self.client.post(
+            reverse('gastos:monthly'),
+            {
+                'reference_month': reference_month.strftime('%Y-%m'),
+                'income_amount': '500.00',
+                'income_type': 'variable',
+            },
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(MonthlyIncome.objects.filter(user=user, reference_month=reference_month).count(), 2)
