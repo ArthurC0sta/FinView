@@ -1,214 +1,175 @@
 %PDF-1.4
-%âãÏÓ
+%“Œ‹ž ReportLab Generated PDF document (opensource)
 1 0 obj
-<< /Type /Font /Subtype /Type1 /BaseFont /Courier >>
+<<
+/F1 2 0 R /F2 3 0 R /F3 4 0 R
+>>
 endobj
 2 0 obj
-<< /Length 4204 >>
-stream
-BT
-/F1 9 Tf
-42 800 Td
-(FinView AI - Prompts-chave da conversa) Tj
-0 -12 Td
-(Gerado em: 26/04/2026 13:57:57) Tj
-0 -12 Td
-() Tj
-0 -12 Td
-(Este documento resume os prompts mais importantes usados durante a configuracao e evolucao) Tj
-0 -12 Td
-(do projeto.) Tj
-0 -12 Td
-() Tj
-0 -12 Td
-(============================================================================) Tj
-0 -12 Td
-(1. Ajuste do ambiente virtual) Tj
-0 -12 Td
-(----------------------------------------------------------------------------) Tj
-0 -12 Td
-(Prompt: "ajusta o ambiente virtual neste diretorio atual") Tj
-0 -12 Td
-(Objetivo: criar e configurar o ambiente Python local do projeto.) Tj
-0 -12 Td
-(Resultado gerado: .venv criado, dependencias instaladas, .env minimo preparado e Django) Tj
-0 -12 Td
-(  validado com manage.py check.) Tj
-0 -12 Td
-() Tj
-0 -12 Td
-(============================================================================) Tj
-0 -12 Td
-(2. Correcao de arquivos estaticos) Tj
-0 -12 Td
-(----------------------------------------------------------------------------) Tj
-0 -12 Td
-(Prompt: "ajusta os arquivos dnv") Tj
-0 -12 Td
-(Contexto: o runserver retornava 404 para /assets/styles.css.) Tj
-0 -12 Td
-(Objetivo: corrigir os caminhos de CSS/JS nos templates Django.) Tj
-0 -12 Td
-(Resultado gerado: templates usando {% static %}, rotas internas usando {% url %}, CSS/JS) Tj
-0 -12 Td
-(  servidos por /static/assets/.) Tj
-0 -12 Td
-() Tj
-0 -12 Td
-(============================================================================) Tj
-0 -12 Td
-(3. Revisao do erro de assets persistente) Tj
-0 -12 Td
-(----------------------------------------------------------------------------) Tj
-0 -12 Td
-(Prompt: "ve dnv, ta dando erro") Tj
-0 -12 Td
-(Contexto: o servidor ainda registrava Not Found: /assets/styles.css.) Tj
-0 -12 Td
-(Objetivo: encontrar referencias antigas que voltaram aos templates.) Tj
-0 -12 Td
-(Resultado gerado: nova varredura nos templates, correcao de href="assets/styles.css" e) Tj
-0 -12 Td
-(  links .html.) Tj
-0 -12 Td
-() Tj
-0 -12 Td
-(============================================================================) Tj
-0 -12 Td
-(4. Coerencia entre login e informacoes exibidas) Tj
-0 -12 Td
-(----------------------------------------------------------------------------) Tj
-0 -12 Td
-(Prompt: "quando eu executo o server, no proprio html ja exibe algumas informacoes que nao) Tj
-0 -12 Td
-(  sao coerentes com as informacoes do meu login") Tj
-0 -12 Td
-(Objetivo: remover dados mockados como nome, e-mail, mes e objetivo fixos.) Tj
-0 -12 Td
-(Resultado gerado: fluxo inicial por sessao, paginas internas exigindo login e telas usando) Tj
-0 -12 Td
-(  dados do usuario.) Tj
-0 -12 Td
-() Tj
-0 -12 Td
-(============================================================================) Tj
-0 -12 Td
-(5. Persistencia no banco de dados) Tj
-0 -12 Td
-(----------------------------------------------------------------------------) Tj
-0 -12 Td
-(Prompt: "precsamos registrar os gastos, informacoes de login, e-mail e senha no db") Tj
-0 -12 Td
-(Objetivo: salvar cadastro, login, renda mensal e despesas no banco.) Tj
-0 -12 Td
-(Resultado gerado: uso do User nativo do Django, senha com hash, models UserProfile,) Tj
-0 -12 Td
-(  MonthlyIncome e Expense, forms ligados ao DB e migrations criadas.) Tj
-0 -12 Td
-() Tj
-0 -12 Td
-(============================================================================) Tj
-0 -12 Td
-(6. PDF com schema do banco) Tj
-0 -12 Td
-(----------------------------------------------------------------------------) Tj
-0 -12 Td
-(Prompt: "gera um arquivo pdf mostrando o schema do db") Tj
-0 -12 Td
-(Objetivo: documentar o schema real do banco SQLite naquele momento.) Tj
-0 -12 Td
-(Resultado gerado: docs/db_schema.pdf com tabelas, campos, relacionamentos, FKs, indices e) Tj
-0 -12 Td
-(  restricoes.) Tj
-0 -12 Td
-() Tj
-0 -12 Td
-(============================================================================) Tj
-0 -12 Td
-(7. Adaptacao do schema com utilidade das tabelas) Tj
-0 -12 Td
-(----------------------------------------------------------------------------) Tj
-0 -12 Td
-(Prompt: "pode adaptar o schema? indicando a utilidade de cada tbl?") Tj
-0 -12 Td
-(Objetivo: melhorar a documentacao do schema explicando para que cada tabela serve.) Tj
-ET
-endstream
+<<
+/BaseFont /Helvetica /Encoding /WinAnsiEncoding /Name /F1 /Subtype /Type1 /Type /Font
+>>
 endobj
 3 0 obj
-<< /Type /Page /Parent 6 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R >> >> /Contents 2 0 R >>
+<<
+/BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding /Name /F2 /Subtype /Type1 /Type /Font
+>>
 endobj
 4 0 obj
-<< /Length 1438 >>
-stream
-BT
-/F1 9 Tf
-42 800 Td
-(Resultado gerado: docs/db_schema.pdf atualizado com visao geral, fluxo de dados, utilidade) Tj
-0 -12 Td
-(  das tabelas e descricao dos campos principais.) Tj
-0 -12 Td
-() Tj
-0 -12 Td
-(============================================================================) Tj
-0 -12 Td
-(8. Configuracao do banco Render) Tj
-0 -12 Td
-(----------------------------------------------------------------------------) Tj
-0 -12 Td
-(Prompt: "criei um db no render e salvei todas as informacoes no .env, faca as configuracoes) Tj
-0 -12 Td
-(  de hambiente") Tj
-0 -12 Td
-(Objetivo: configurar o projeto para usar PostgreSQL do Render via variaveis de ambiente.) Tj
-0 -12 Td
-(Resultado gerado: settings.py lendo) Tj
-0 -12 Td
-(  DATABASE_URL/external_database_url/internal_database_url, requirements com psycopg,) Tj
-0 -12 Td
-(  migrations aplicadas no Render.) Tj
-0 -12 Td
-() Tj
-0 -12 Td
-(============================================================================) Tj
-0 -12 Td
-(9. PDF de prompts-chave) Tj
-0 -12 Td
-(----------------------------------------------------------------------------) Tj
-0 -12 Td
-(Prompt: "crie uma pasta chamada prompts, salve nela um arquivo pdf com os principais) Tj
-0 -12 Td
-(  prompts da nossa conversa") Tj
-0 -12 Td
-(Objetivo: documentar os prompts que direcionaram as principais etapas do desenvolvimento.) Tj
-0 -12 Td
-(Resultado gerado: este arquivo PDF em prompts/prompts_chave.pdf.) Tj
-0 -12 Td
-() Tj
-ET
-endstream
+<<
+/BaseFont /Courier /Encoding /WinAnsiEncoding /Name /F3 /Subtype /Type1 /Type /Font
+>>
 endobj
 5 0 obj
-<< /Type /Page /Parent 6 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R >> >> /Contents 4 0 R >>
+<<
+/Contents 14 0 R /MediaBox [ 0 0 595.2756 841.8898 ] /Parent 13 0 R /Resources <<
+/Font 1 0 R /ProcSet [ /PDF /Text /ImageB /ImageC /ImageI ]
+>> /Rotate 0 /Trans <<
+
+>> 
+  /Type /Page
+>>
 endobj
 6 0 obj
-<< /Type /Pages /Kids [3 0 R 5 0 R] /Count 2 >>
+<<
+/Contents 15 0 R /MediaBox [ 0 0 595.2756 841.8898 ] /Parent 13 0 R /Resources <<
+/Font 1 0 R /ProcSet [ /PDF /Text /ImageB /ImageC /ImageI ]
+>> /Rotate 0 /Trans <<
+
+>> 
+  /Type /Page
+>>
 endobj
 7 0 obj
-<< /Type /Catalog /Pages 6 0 R >>
+<<
+/Contents 16 0 R /MediaBox [ 0 0 595.2756 841.8898 ] /Parent 13 0 R /Resources <<
+/Font 1 0 R /ProcSet [ /PDF /Text /ImageB /ImageC /ImageI ]
+>> /Rotate 0 /Trans <<
+
+>> 
+  /Type /Page
+>>
+endobj
+8 0 obj
+<<
+/Contents 17 0 R /MediaBox [ 0 0 595.2756 841.8898 ] /Parent 13 0 R /Resources <<
+/Font 1 0 R /ProcSet [ /PDF /Text /ImageB /ImageC /ImageI ]
+>> /Rotate 0 /Trans <<
+
+>> 
+  /Type /Page
+>>
+endobj
+9 0 obj
+<<
+/Contents 18 0 R /MediaBox [ 0 0 595.2756 841.8898 ] /Parent 13 0 R /Resources <<
+/Font 1 0 R /ProcSet [ /PDF /Text /ImageB /ImageC /ImageI ]
+>> /Rotate 0 /Trans <<
+
+>> 
+  /Type /Page
+>>
+endobj
+10 0 obj
+<<
+/Contents 19 0 R /MediaBox [ 0 0 595.2756 841.8898 ] /Parent 13 0 R /Resources <<
+/Font 1 0 R /ProcSet [ /PDF /Text /ImageB /ImageC /ImageI ]
+>> /Rotate 0 /Trans <<
+
+>> 
+  /Type /Page
+>>
+endobj
+11 0 obj
+<<
+/PageMode /UseNone /Pages 13 0 R /Type /Catalog
+>>
+endobj
+12 0 obj
+<<
+/Author (\(anonymous\)) /CreationDate (D:20260506200836-03'00') /Creator (\(unspecified\)) /Keywords () /ModDate (D:20260506200836-03'00') /Producer (ReportLab PDF Library - \(opensource\)) 
+  /Subject (\(unspecified\)) /Title (\(anonymous\)) /Trapped /False
+>>
+endobj
+13 0 obj
+<<
+/Count 6 /Kids [ 5 0 R 6 0 R 7 0 R 8 0 R 9 0 R 10 0 R ] /Type /Pages
+>>
+endobj
+14 0 obj
+<<
+/Filter [ /ASCII85Decode /FlateDecode ] /Length 1707
+>>
+stream
+Gau0DD,91O&H9tYQnKh,Vim&,]JTAB]*3k*[0pgF:+%3e9]?g4-Ot=J?1->%3(_ji9@N;E.VMhCSS)Q+H"IHc+((i>S)s^#9]4_e!CC3M"VQ%\9Kp8FjQQ-4>8b&,`/D4q]c\@$MuXcB@?C6ubflK<mbBMeU4air=Q'!#N'iunE-s9r^SU]0VjD?(=%;@aA`69.Q2H\UgAVGC#FPGOcL2j/7h?HSc]985j(j=YY`<Dki&H\/E>0",&!oFGP5r;fr7DP#A+3#UnZ3P*I:s+?G><]IOeAuN2bL`9&DZBb,hq"1PNU[=S=>YH("1>2Ib8_\DjF`3-^!"h-^^d88L&<7O3_Vg+Ob%qMk\X]lG@9^1Ci,*Bk3@KP"YPSFei>)!a0AbJX^qkWA=,uV?)17`q*RQL(UTOO9o.]a'(%l5;'M*YO$*JengHP4pu>K#@?=-;:7M<(1u?&%\li?/l0/n$/ZSt-jd?f1;ZgM:,kiW`s(USONY?_oic$]"Xch[et`U&n_i3dU,ilTk$14s4GZVuJ26a%:bjenDY@8B><XYQX+&q,&1%F/#k_;4nB7(/;f-P]<?f&l$tF!?is6"r9+7'c4Luu!/-:2i$^j<I`N>Y`%H]m7'VJmG$n'K&<#A:S#h1ktW)PP6.gCD8GEC\QS0Nsh1j$1&iY?ACJjf/Z3>7FjG`js@?6HXWk=h"c74KSRZkV)+Xr8Y%,ho2Xq#3#o)\'Y==W6Xt`#E.N>jmcc0I?lU69;n.&g.[q_SI-1Zq\fe6M#(d*!>>[RjQ59HRXodAKaL.EL9C'A*bnh;]#&t*cdeX;t+?<#=["=r:YC&!VD:=S;KPq\cQ<hg?9-m'Xp!PVS&6R8&aI7ZV[@2=`qnsRS&g7&S0\Rhe?>"EC5?Y<6.BS4L,TsFgT2O@Gf.fIdc57f&'^L.%O>_&>OA]'JD4EbXS6^Icn@27k3[[P2Ec)61MEhX]F5[<abf"USkt&V:sb7+GgVq\'Hh5'rGk\S9Io"3cl!?6e'fqgImDmX@?U*U0_pV*JJ1SX*M=4(ZT%Q*<eFLYQK"XlG7gE.fBL(L)\&ab]'B`5qmhNL-I:MM^`6q&*tE&!=8uRp#_RLkSoqOhf4U+'Q_SU3G[aa2rg,Nkh.`0V?nuAdihS$$/=;Bff46*7eknT&$9&9SMe==<6fFkbOcqPQu:4S$e^RSjO5+Z2fcW*:VtC<!/(O]Ps[KC)Pk4H#@9A"\?Q^(OKD!th1^CTrArgAC%;*)SfYh(08k:iaI[qeJBN1MH$i[dQ$N);>?Dqd4Bf42$1'hF>\u10W!a;3K<"st]r].BNUu`IY-b<C7XVrLJ3l9ZY#u!?/nEE`G^_$26LGm23ptn&IPNMlgtaKV!PC#"63;/(&8@,fg7%o<<_B/&hC^:GXp"e`m)\;4@&mV?h8A,0fe*FbL^nTn?liQ^2A#Ip1j*m'L!br@f++,eA\eB#_$T2,<sn4'gr)_r]r@1W8FhNslgCB^'gd6l=:6q*H(t]<#YqQU^]&BL03!oBj1mM'Y(L]b=JPYB-]7_]%[6EJUF+Aa2!R5GR"PS/RBYmo2>ogW&@m^g:Y/scR'%7.Y1Im1C<W6O43bRD\A*E"D'!Re]e!!;gqC`nWZ!!SV='?jBsf6Hi2(6n(VP=&i+Oe?/C3+QCeJRN]Q`Pp*H64h4Ug7Dl3sP3$&\&V/(WFVIs8CW>J\!:Jtr>H*rd8?~>endstream
+endobj
+15 0 obj
+<<
+/Filter [ /ASCII85Decode /FlateDecode ] /Length 1720
+>>
+stream
+Gau0Dhf%7-&:Vr4EA%F,+]Up&e;q9Wma`'Q$FF$n4p;3oM0<#mU.S$af=uc)9!Xl)M<red?pbN%e9Bg+I<Q*N&:]Q6/o#nQ/%E/;5U`_b5iNo@eSBE?](g;#Y%2]!&!HI3&>rYN&O=6a`Hb!?DlbB*pLQpXj>84q`Bd$sb$\5ei`\5^V"b1\2t.74C/qa6JbP_:j>UBpo.-n+_s01m^V:M$6)$?P^D6F#s$E*:F[F+bV[3a:,U)@m/dF4o$-<0kZ9O.,ZjqJ=3eZ.'IW\A90ZQS!rE[>Bgm"PtjB<>s(9udF;G_C92L%eCB`u']RcBr>Bt.=&6['@hMg"k*)karm#=>ot4kqGn"(6_c)%]:JnN\_6=uM(NH1h%HJ7q%ILp/!?%=WT'`EMMpGF^/>Em66=P%4knO^X+R!<G>OE0L>/Z2ntKBoig-`>iIn>+!%h0GQ.H]]"lP]Y%BRJhWal)B&c2Q]7r:`*b]_G63`)00qK+%t*W\ma8G*Y^&&VLKk7_SVm^^Ot>H-S/dbP+$YZYDUf?88CD_e#\,[D6"35KpIHK`KFVNWbKsj$_W$lW.JtXU=0A7G]J2"iR-=ZDef5CrVRNpJW>r5O$AGOi;+b\iG-T[SX[]1?aiEp?:Uh=>*i0)^R*\Ul4bkB17o,FNLF>"=m)7LN_,d"r=+`:=Oj1N.d=kZ7&$s3$a5R57B`<,/=IscorgYOE!1#LoqS"62/:f==EXbidGuG!JeU5rQCaSIM_L=WGImB27@l&YpI2Vr)RcMSPJdjZ+;Nh[NmH0U,pd3MuDe^Qq3M:BPU2^KD?7Q+nr_7'RcJWU7j#*`)/=L8cN;Q)-3'iU-37Al,/=FV='D1M%E@!_E$L:t-,E%8U5"VOj)aT$4CHCiL@&6D</l#09D"YDT350Xt,X%cs?Fulbr7Qp#3QQ#n*=J2l!`p3gCVdj0Xg(WBgB1[1PkJ7@J^RWZ'0Kb"9\=$![OEX3i"+@G4F0eae2ZVoY<BS<Bb+P'E\d6s(R(9BMt4Dbpd>]FmmY=>Vep%bj9]=@;q0G>nX:B?\_:Y$0TS<<fF2XN3_4_<:p#h$P/M(%+Sg9u7eu)9cnY.=Q"1:'#s>eY1nCT@&O>BE/;^+J"*t6t5c2Ti^+[6%"_ta.I@\3kWN!Fk4D=aX![A/H`eXtOL?Xq6O1'WNWXrPc+KSPcX<!Hd@4GQ`*KN.klra0KPd="+S1_C%dgKZF?YF=fFm6J-LS%IZ@Clp>GTPR'ruSMpW7nooCSnK%,k&,F7'i0HAh,>g`I.^`4&NIjTW1u(OK&nsmqDX'_@BJ]LP_'Npnt(W.'9BZ]2XRAlVoAB"B+k1"+,kK=-$9^TsV7k?)_G2Hu,BI8u&q59TNg;C#-`K9"D2_W#\"P*"N7;i,cThjQ0FrBbds\i97X766J)2TSmKCldD0*9A%*N$`,0,Hd1p^CG\A8GSSH1AK'$q`tD">+.nb"qdq4K8$ll#B$MqQT:6Ef3[u7d[L-3pg,%Aq*L<L6S.]/O>%16c/^r@q>rn5]948k]4(J/;o249'm;!6(/I^D"D-bpd8`\%U"FO'q54WOCn=a[b>ZqL'n@]Wj'>W#bN9"]R!&h4X0S=E<kVtOO<%4pXfk.o4eHqo=ohRK2Cm^7Bo6"a3L87*NrNUNBnTuI/`4p+NG_a?5eAm'q`kB>lB;XPQD6UO'[ARCCTBGc_SC$_$p$ZY.rq'T^n)l42p^dD_.2;~>endstream
+endobj
+16 0 obj
+<<
+/Filter [ /ASCII85Decode /FlateDecode ] /Length 1631
+>>
+stream
+GauHKgMZ%0&:Ml+$l18L(5X5m]&kRR&n$9-lR(J:apV9_>QttC:m.=8f69^Y(pRYM7WWPho:j-j1M718\G4>6f/*U)FTIhQ%%%9X-Xa[K_r;'Z0$[eKg6%a,&gqK[GPil_3<Pf8"Ff?V?ro1M[JL0%'..&&JGYAMJgc.<#.$Cf^FAt;>^qJ9Qs5d9AH?.2[9!<`V($kJ`A9&oU&E#9i>.CLdG(euB_%c$Z^Vt]m=V1dFlG)cGe>%16InqW3HONF[tepR48%&N!"$?XfPl_`lpbNr.7!0X,32gDd(KCgJF1Aj@a)Ci5L$<X1,]eW.@5*a`L4W\3:nD6R"t29a)`[1>C^u)ETHTn15Er-R]HZMk-%3"X>1gGfcT+DAZ7QlSs1!OQ-'SH^W?PC&eKc(;Q!.Z,PP(h"f,TVMULL"5Hli<=OX"@/94mL5+T"bZ!IoEc_X@4/h<H^+p3o1Lgi2i,>,L%<fK#),AaEH!d>\//4D9Y(W@(36JnD+J/<U'&AK0C8RVV:!nfK=F21YJ9DMa0:c_l`l2\hW/D(Im#iZLO`_Ub57Up?*7.l--^i.0F=:jeXg%so8^^:s6C"aW5Z7#kt^],.W^;:C8??skOXYj:Z3.V>C3W>MiaTMit3"[esqKRV\.fG/QKYQ:^OM$*4qn`%6`dKKWjs(d_5f7@o?B^k:)!<H90RI>-"LktLE[<9tR!B84q&68l_HpdX9NUDEa[0F7qf@]Ul?#O2pYC6QIjD,q*V`*h#lCH]%;M^ua9Eh/Wp11`nD23<M#rsA;Ba(0j(th)$)t&270sZU$oA/(2=MSd."R,1]*kiZ9)f1PJ`#L:ItAJt%d*6\CRSa)LOS<=fR8t9jiMBQHgMF8W-.9pKar=\c:`7U(i0!o;E7HbT>g]$nju1:WNIm$($^l=b2["67Pq"*]+!oOh5,V>L^nT$Kc1I.@lle?*@k-9.>gHX`T;/\.Iu8>/e1W9&&q"#27eO(QQ,R!Kp2Nr*0i`S6]S;=_msXK-:m2.aY4)L^pq2eg)di1*F8,;Mn8'@#;'6q;kTjTTqo]B1t7M8HCDZ6W:XFB<Zjk(4#e]pfK4]$1tA'pN?<6"*Y";V=!]Y]P(Wg-PH,Dl9Ij<t%':dD='DG239un*l/L/l,Nu*\kOgXV!WD5+o[Dldc>f.>_h"*^GL\[0^sJ_/&rR">hpkT;K^Whg?KD-)*RtNFr0rK?s("j^_5oB@e=3I3N&s=Ckq.Um-Gh!.oFZ]D9j3W'0]!XPW26l<%ceVr2`t1<W+P,$-ZgX.E\11#1h(eF^7A8U1Yh!BrlL<:HBGa?>,1U;8rtXT,ZZnTAGO;64tao$!63lEd^"sa]Rk#u9rbKcb==Q?@A0RT5sM$>=>3V1bT1H`j''WiSRQpH&$:FhFag_^_T6+.3=<>`p//k!FShg:l]IUSgE\V"Q'&6jM=,We[m;@EC7tm58pkg<V!(^.%Zk4"knP)PHIq]`q3J<miH*^g/';aZ>m40WQX"#nO\&_C:0500(%mcM.Ve&)NNYkK9F&Md'T:q7D=r_)lC1t<6N3trI#bYR9T"/EoQl#]4dZZlcuXMicWH,dk4FA!o=ZE]i:i8<@;&Q:2fd:)RrpUH8($]$VhFAB(q-p]BE&&0SZKL~>endstream
+endobj
+17 0 obj
+<<
+/Filter [ /ASCII85Decode /FlateDecode ] /Length 1536
+>>
+stream
+GauHL9lo&I&A@sBm%KhE3snUli)aj"CNhn)1p0@=aVU=t-$VsG+\4PU?f)#Q;08RhU+Fpi82:JQ&%h_q>DRfj^SH;&8q>e8nEUei'#<K=#kJla5/?:>m)rOU-a>U.0C#]e/5@$.J-3KHV1&EpdLISZ]OBkiBoit#bk"CCLTi18FsY\0'`YuE28"^68sekt^unl:nf,o_q&'rDYkZ2_5F`(Y+I'huVdb:pIj<1^kU>X1NYC;CU57b$IP;lgrI?P6IXCtR-@DIm]:'0oC-Q0DW/\UZ:/pAI19*ViR7U`_p&`S."[b%sL]nje#/%RI`1sJ-?IpC9i>"TK8<cM.$m#^/int!S9u2<%dg0n)LRCKq`@c"9$i4,u65fn"V[Y2fWUVRl:^R<Ae6E+4="BaI^jl!oPGmTLL.A5Qb(Qk'*Sm*;=&OC?$(ua^S)"/Pkm'mW^^"#bRUZ]a2@YFph^A<k6qK(1&;24"?jhe!J-$PDpBcj_j=n1nE=AIs'n>AMY,'5$RMVes[=C+]Z3u%%^[A?K"-4Wa&uQ&GrX`k=Eli/FG9hDC--,(>Q#fd)^i:<I[!O5jNV>31ZH@WbYQ7^UrK4#JnWg>T,-RJgLkmT#_*d4r')jg6$E+*i^rCU;-O&EQ?#k1MP?%=!$<8<8gojC[&fn0@+%<H_Q/i0\-B+]3+CT:O/mN($A1it,S&io!(M57XrFC/8gYeCHMERd"ku?_5<%)ehRaPY%CQ0'[%$b[H<4orC+^)sH:Oj5i7<^,Z%>51d!QrZ13dBg`%I->cB?3>iV$7p@cmao'.Rg<[>DXZ05a8s0i5I".AWBhre<V34oX!;E+S'p;TDO(]Y?uT6@?6*0k;Q'35nL[OAV;>MB52q#VqFLP+.,](!5ql]g/`FW_8g_3<uXVL1LB8r8k'r/oQWrLXju!M%U^?Qkm3q)I8`j>)@Vr.*1hG4=sqL9+foBeRCMN8[Vh-WmE-k"(>kM'Z%9"F*'i!6GaZ2A.M+CFP9t'[R30k@cm0Jp'W5m'&mdJHCgH9``\sVN[#U`<M&:K%RlU$XH\Q/cJ[aKi=jbfBRZ2a?\*bO^a[H<1=/M;aKaV!1CR5pH,T;Ye1hC/lYU<M]_DF^+&'GP*Tdh?U`IF_[?D(.*l5U`DSVuKSV0$I)#EM),04(?;e/rJCVq@7\iY%CH"?d_qE6@VG!Xj7*!Dlq'+'Lg@]Jor<.D,"`Pnd$FV<338L;:$_Y/T#H?A7_:$0YK9_CiaZ"icJTStEC'C"l=jkAkc]aYqCAomO#(!B2$]i4ruXNP3W+;\/;lESD=LMSnhYQ"m'X/cd4,p7irh4l//YE,-*6&O7Ld;r@?Xc!Y0tV.u@^YKa=8F;8-:d_b.SYRXf;nc<Sh%!-:!V/21u=C^PGGUc#h"C5H@.G$W?UCgeT9Udck+G6joFq4lBn[@te4+/-4Ts5XqF`ku)_Vdl%Q"^>-p#cG[KiUk4a!Dk'S[EA\GrTGHGBuI_;KisGQlHHL(RiL`;RQC:C!EJ@ZR^9[3`B.n;`(apWL4,SSG`gcQj9Y~>endstream
+endobj
+18 0 obj
+<<
+/Filter [ /ASCII85Decode /FlateDecode ] /Length 1516
+>>
+stream
+GauHLgMYb*&:Ml+bf^(PU/f1%/q#1[BsLiKMp2<@TDZPs[*,Nr3i(gGqXlq7j@ce]Bt&7p`#!GZT/e]KAnV6#5"P]Ye,[6Xi9^sS6=DVO_BTPS5N-p/nSg5NA:>baP&WYEBuV"k1lMR`@g[DI:!%X_8>7B-3<@-pR#"_WUk[&3h0dW8?hj*q]Ra:&l:($sF/phi9pWf4K#p/LIeDlB+,*2r`m^hUM(Rc&&a%4sU#QreM28G_+m9tb7l9C^A:Q''5K"Rh#G.WLJc!@BhG>>hB-R*L?BR:":K,8i/#8I"aY^$j+0Ci)@-e(AfG_hK"*A@32"%iFj'n,fO:_o<!0-Zu"r:WUF]7LXXPOrtM"1Ng+sJo`r,QT'bh-+-XX\8:qhp7U=[H&_P%*JqU:Ze'$'6PS+>ZQ`F@[M$@t*WP;]7(W>dq!s%[OCU<k6g)_5RTe$'Le;5=6Y!Klkc%RmP_)4(s?Xjn]O=/54Nm6K*d;P_e#HYFPkh`n(Db8)jABeVhQi&:c%f!?B3.6K\W);kU^aIuC9Ia0.d/C.58;mp%BZ#6GG+]5\hM2A(%\;C.;#GaAAPGHY2`4G[5\.(:H;JKPVd8E^6al]KPF]Jg_^9M2gbOu.ks=^':IHs'9?CLnrC`fBj'ogU>`b8UON+:[+/l#`c/2:9RAn_!:l-F+m^i"<K&9X@^,<>Nf/G)5i!?dmP(-4k?Ofmr2Gb7>UuC@kFKHs-B""a:+C1ts)d_,%#\,XVO4<DQTTg0+TGbFiV-HHL-=)pTnK!]_RJb=]:#!troNo1Je##H_aT)X-H@IurYn=(%<FkQ2..q/S/;l@[e)VD?deU"=6*LXFQ"#2_=@3(mtn0:&H7#!'OX2+B/C5<K<E4&:;lg5h=;/csbPR5eaq>DjtK#G/.T=2Z?0;jPk3eVad(B2<KM5dbW'\?Bf8%^057daMpmQ1Zn1la`:_2U.mW<n.Bh$"":YhGgZPU="\e18O+(E6'TV:<7JeGp]T79Ab9PR9J<!F`Bf(i,u:B"B3Y:7JiXfaujc<X0$U`+-3s%5Ksc`@!TE"jI&P7-_WAKO/D,UChd1lR">hV%+(3WE(R8cD;T1q6_,g-So--Pg)X"dN$JEpEI([a6lHI#qVbL=/h67RYr.n%dLWdpCHK`oS<4W=T_)V0>gAU7?>UM?Crej.S=.(u#p\8@"M5*uERn96eu+DlToY2YUG%$6I7:>ZI9(KO#1]B4?LhZ'a-Hd3pA:EjVd"jE$J$_u;t^2(dQmi0>M\6X,iB]^WHkBAUZe]H?9U"fB^b6\5u2IDhB,M4?DPnE)JHW;%ZNkHlYlTK7;Ddg>5/;A\<7IEUefRcITO8:hL<--PK_>+4T\`KSrU)WfVZ$9BJkJ+V^?(I])N=/SF"Q_&nbFqJ$KBd#X5jAk`mUIA%3rX+gLh:Ip#?%"tssl8C@L2EG"-A;h(R9cn/Q,Yd8JQ?hum]Kr9#0s(==)b.b)=cFla(f1cdrhbe0rY53KMV42`XkBMnP]mM1*E:G#QEXE]~>endstream
+endobj
+19 0 obj
+<<
+/Filter [ /ASCII85Decode /FlateDecode ] /Length 424
+>>
+stream
+Gat%^;+ne\'SYHA/'d/h(RlaG>MiDM#SV;JT6uK22Bm"e[<7AAhP>>+JX]1RPha0eh`6?6F<BnrGmR_HS5(JG"M"NoKL8LS-%f2O9N"*rL`#Od:K#IdS<1ZO$R7K$0;X;>/;VBAN.Q$^dQ!(,98k3pH8PI-k;O7<Y-DQo[<Un/@6RY.gEXcUaCF\RD<3;sj2nHhfFm('b`,do_r;pN8Lajcnb*4kr>)JdYTN=g#f0'HbnlK;?e5bY%?+o1I4[JbIC@&`qkBJW6,FII#>$=f.+&P4lVSje1rVFs)OY+-7$@a0]ejTX=QC6a2V7DbgX9Q)Rmr[Sl4iO'<-)!=!kF&cXg(\tY$526D6Z!*A]Z:N@"'5iHS1)#r!32&,;(N@[BNBili"tF!k!,L)UGG6mM`[Topm)CHS?%Z!ejOTqZ~>endstream
 endobj
 xref
-0 8
+0 20
 0000000000 65535 f 
-0000000015 00000 n 
-0000000083 00000 n 
-0000004339 00000 n 
-0000004465 00000 n 
-0000005955 00000 n 
-0000006081 00000 n 
-0000006144 00000 n 
+0000000061 00000 n 
+0000000112 00000 n 
+0000000219 00000 n 
+0000000331 00000 n 
+0000000436 00000 n 
+0000000641 00000 n 
+0000000846 00000 n 
+0000001051 00000 n 
+0000001256 00000 n 
+0000001461 00000 n 
+0000001667 00000 n 
+0000001737 00000 n 
+0000002018 00000 n 
+0000002109 00000 n 
+0000003908 00000 n 
+0000005720 00000 n 
+0000007443 00000 n 
+0000009071 00000 n 
+0000010679 00000 n 
 trailer
-<< /Size 8 /Root 7 0 R >>
+<<
+/ID 
+[<b1a4ef03cf297c8aaae2d36aec62e2b3><b1a4ef03cf297c8aaae2d36aec62e2b3>]
+% ReportLab generated PDF document -- digest (opensource)
+
+/Info 12 0 R
+/Root 11 0 R
+/Size 20
+>>
 startxref
-6193
+11194
 %%EOF

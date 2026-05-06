@@ -54,6 +54,99 @@ Os prompts abaixo representam os principais comandos e pedidos usados durante a 
 | "me ajuda a configura a integração com a groq AI, API_KEY tá salvo no arquivo .env" | Ativar a integração com Groq AI usando variável de ambiente. | Leitura segura da chave, cliente Groq configurado e dependência adicionada. |
 | "o resultado da analise da IA, está no painel dica? Se sim, informa que analise foi gerada por IA" | Deixar claro para o usuário que a recomendação vem de IA. | Painel identificado como "Análise gerada por IA". |
 | "a analise do gasto está alinhado com o objetivo? se não, vamos fazer essa amarração" | Conectar o insight da IA ao objetivo financeiro escolhido no cadastro. | Prompt/contexto da IA usando renda, despesas, saldo e objetivo financeiro do usuário. |
+| "no site, vamos implementar uma relação de metas do usuário" | Evoluir a análise para considerar metas concretas, como guardar `R$ 6.000,00`. | Prompt/contexto da IA usando renda, gastos, objetivo financeiro e metas cadastradas. |
+
+### Construção do prompt de análise dos gastos
+
+A análise financeira da IA foi construída em três camadas: instrução fixa do sistema, contexto financeiro gerado pela aplicação e pergunta enviada pelo usuário/interface.
+
+#### 1. Prompt de sistema
+
+Local: `gastos/ia.py`.
+
+Esse prompt define o papel da IA dentro do FinView AI:
+
+```text
+Voce e o assistente financeiro do FinView AI.
+Responda em portugues do Brasil, com tom direto e util.
+Use somente os dados financeiros enviados pelo sistema.
+Sempre relacione a analise ao objetivo financeiro do usuario quando ele for informado.
+Responda em topicos curtos, sem texto corrido longo.
+Se os dados forem insuficientes, diga o que falta cadastrar.
+Evite prometer resultados e nao trate isso como consultoria financeira profissional.
+```
+
+Objetivo dessa camada:
+
+- Limitar a resposta aos dados cadastrados no sistema.
+- Evitar respostas longas ou genéricas.
+- Manter tom direto, útil e em português do Brasil.
+- Amarrar a análise ao objetivo financeiro do usuário.
+- Deixar claro quando faltam dados, como renda ou despesas.
+- Evitar promessa de resultado financeiro.
+
+#### 2. Contexto financeiro enviado para a IA
+
+Local: `gastos/views.py`, função `ai_context_for_month`.
+
+A aplicação monta um resumo com os principais dados do usuário:
+
+```text
+Usuario: nome do usuario
+Objetivo financeiro: objetivo cadastrado no perfil
+Mes de referencia: mes analisado
+Renda cadastrada: total de rendas do mes
+Total de despesas: total de gastos do mes
+Saldo: renda menos despesas
+Percentual comprometido: quanto da renda foi consumida
+Categorias: total por categoria de gasto
+Prioridades: total por prioridade
+Metas financeiras: alvo, valor guardado, valor restante, progresso e valor necessario por mes
+```
+
+Objetivo dessa camada:
+
+- Dar dados reais para a IA analisar.
+- Impedir que a IA dependa de suposições.
+- Conectar gastos, renda, objetivo financeiro e metas.
+- Permitir que a IA diga se a meta é viável no ritmo atual.
+
+#### 3. Prompt da interface para análise dos gastos
+
+Locais:
+
+- `static/assets/js/app.js`
+- `gastos/views.py`
+
+Prompt atual:
+
+```text
+Analise se os gastos e receitas do mes estao alinhados ao objetivo financeiro e as metas cadastradas do usuario. Responda em ate 5 topicos curtos, cada um iniciado por "-": situacao, meta, viabilidade, ponto de atencao e acao pratica.
+```
+
+Objetivo dessa camada:
+
+- Pedir uma análise prática do mês.
+- Considerar receitas e despesas juntas, não apenas gastos isolados.
+- Relacionar a resposta ao objetivo financeiro e às metas cadastradas.
+- Forçar uma saída curta, escaneável e fácil de exibir no painel lateral.
+- Padronizar a resposta em cinco blocos: situação, meta, viabilidade, ponto de atenção e ação prática.
+
+#### Evolução do prompt
+
+O prompt começou com uma análise simples de gastos:
+
+```text
+Analise se os gastos do mes estao alinhados ao objetivo financeiro do usuario.
+```
+
+Depois evoluiu para incluir renda, saldo e metas:
+
+```text
+Analise se os gastos e receitas do mes estao alinhados ao objetivo financeiro e as metas cadastradas do usuario.
+```
+
+Essa mudança foi importante porque a IA deixou de apenas comentar despesas e passou a atuar como apoio de planejamento financeiro. Com metas cadastradas, ela consegue responder se o usuário está no caminho para atingir um alvo concreto, como guardar `R$ 6.000,00`.
 
 ### Interface e experiência do usuário
 
