@@ -13,7 +13,7 @@ from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 from .ia import gerar_resposta_financeira, groq_configured
-from .models import Expense, MonthlyIncome
+from .models import Expense, FinancialGoal, MonthlyIncome
 
 
 EXPENSES = [
@@ -239,15 +239,54 @@ def dashboard_alert(committed, balance):
     }
 
 
+def format_goal(goal, monthly_balance=None):
+    required_monthly = goal.required_monthly_amount
+    required_monthly_display = money(required_monthly) if required_monthly is not None else 'Sem prazo definido'
+    balance_gap = None
+    if required_monthly is not None and monthly_balance is not None:
+        balance_gap = monthly_balance - required_monthly
+    return {
+        'id': goal.id,
+        'name': goal.name,
+        'type': goal.get_goal_type_display(),
+        'priority': goal.get_priority_display(),
+        'status': goal.get_status_display(),
+        'target_amount': money(goal.target_amount),
+        'saved_amount': money(goal.saved_amount),
+        'remaining_amount': money(goal.remaining_amount),
+        'progress_percent': goal.progress_percent,
+        'target_date': goal.target_date,
+        'months_remaining': goal.months_remaining,
+        'required_monthly_amount': required_monthly_display,
+        'balance_gap': money(balance_gap) if balance_gap is not None else None,
+        'is_on_track': balance_gap is None or balance_gap >= 0,
+        'notes': goal.notes,
+    }
+
+
+def active_goals_for_user(user):
+    return FinancialGoal.objects.filter(user=user, status='active')
+
+
+def goals_context_for_user(user, monthly_balance=None):
+    goals = [format_goal(goal, monthly_balance) for goal in active_goals_for_user(user)]
+    featured_goal = goals[0] if goals else None
+    return {
+        'goals': goals,
+        'featured_goal': featured_goal,
+        'goals_count': len(goals),
+    }
+
+
 def ai_context_for_month(user, reference_month):
-    goal = user.profile.goal if hasattr(user, 'profile') else 'Controlar gastos'
-    expenses = Expense.objects.filter(user=user, date__year=reference_month.year, date__month=reference_month.month)
-    total_expenses = expenses.aggregate(total=Sum('amount'))['total'] or Decimal('0')
-    income_amount = MonthlyIncome.objects.filter(user=user, reference_month=reference_month).aggregate(total=Sum('amount'))['total'] or Decimal('0')
-    balance = income_amount - total_expenses
-    category_items = expenses.values('category').annotate(total=Sum('amount')).order_by('-total')
-    priority_labels = dict(Expense.PRIORITY_CHOICES)
-    priority_items = expenses.values('priority').annotate(total=Sum('amount')).order_by('-total')
+    goal = user.profile.goal if hasattr(user, 'profile') else 'Controlar gastos' # localiza o objetivo financeiro do usuário
+    expenses = Expense.objects.filter(user=user, date__year=reference_month.year, date__month=reference_month.month) # declara o mes de referencia
+    total_expenses = expenses.aggregate(total=Sum('amount'))['total'] or Decimal('0') # calcula o total de despesas do mes de referencia
+    income_amount = MonthlyIncome.objects.filter(user=user, reference_month=reference_month).aggregate(total=Sum('amount'))['total'] or Decimal('0') # calcula o total de renda do mes de referencia
+    balance = income_amount - total_expenses # calcula o saldo do mes de referencia
+    category_items = expenses.values('category').annotate(total=Sum('amount')).order_by('-total') # declara o total de despesas por categoria
+    priority_labels = dict(Expense.PRIORITY_CHOICES) # declara o total de despesas por prioridade
+    priority_items = expenses.values('priority').annotate(total=Sum('amount')).order_by('-total') # declara o total de despesas por prioridade
 
     categories = ', '.join(
         f"{item['category']}: {money(item['total'] or Decimal('0'))}"
@@ -257,6 +296,15 @@ def ai_context_for_month(user, reference_month):
         f"{priority_labels.get(item['priority'], item['priority'])}: {money(item['total'] or Decimal('0'))}"
         for item in priority_items
     ) or 'sem despesas por prioridade'
+    active_goals = list(active_goals_for_user(user)[:3])
+    goals = '; '.join(
+        (
+            f"{goal.name}: alvo {money(goal.target_amount)}, guardado {money(goal.saved_amount)}, "
+            f"falta {money(goal.remaining_amount)}, progresso {goal.progress_percent}%, "
+            f"necessario por mes {money(goal.required_monthly_amount) if goal.required_monthly_amount is not None else 'sem prazo definido'}"
+        )
+        for goal in active_goals
+    ) or 'sem metas financeiras cadastradas'
 
     return '\n'.join(
         [
@@ -269,6 +317,7 @@ def ai_context_for_month(user, reference_month):
             f'Percentual comprometido: {percent(total_expenses, income_amount)}%',
             f'Categorias: {categories}',
             f'Prioridades: {priorities}',
+            f'Metas financeiras: {goals}',
         ]
     )
 
@@ -465,6 +514,7 @@ def dashboard(request):
         category_gradient=category_gradient,
         monthly_history=monthly_history,
         alert=dashboard_alert(committed, balance),
+        **goals_context_for_user(request.user, balance),
     )
 
 
@@ -506,7 +556,7 @@ def ai_financial_insight(request):
     reference_month = month_from_input(request.POST.get('month') or request.GET.get('month'))
     prompt = request.POST.get(
         'prompt',
-        'Analise se os gastos do mes estao alinhados ao objetivo financeiro do usuario. Responda em ate 4 topicos curtos, cada um iniciado por "-": situacao, alinhamento, ponto de atencao e acao pratica.',
+        'Analise se os gastos e receitas do mes estao alinhados ao objetivo financeiro e as metas cadastradas do usuario. Responda em ate 5 topicos curtos, cada um iniciado por "-": situacao, meta, viabilidade, ponto de atencao e acao pratica.',
     )
     try:
         insight = gerar_resposta_financeira(
@@ -523,6 +573,57 @@ def ai_financial_insight(request):
         )
 
     return JsonResponse({'ok': True, 'message': insight})
+
+
+def goals(request):
+    user, response = require_session_user(request)
+    if response:
+        return response
+    if request.method == 'POST':
+        FinancialGoal.objects.create(
+            user=request.user,
+            name=request.POST.get('name', '').strip(),
+            target_amount=decimal_from_post(request.POST.get('target_amount')),
+            saved_amount=decimal_from_post(request.POST.get('saved_amount')),
+            target_date=date_from_input(request.POST.get('target_date')) if request.POST.get('target_date') else None,
+            goal_type=request.POST.get('goal_type', 'saving'),
+            priority=request.POST.get('priority', 'medium'),
+            notes=request.POST.get('notes', '').strip(),
+        )
+        messages.success(request, 'Meta financeira criada com sucesso.')
+        return redirect('gastos:goals')
+
+    reference_month = month_from_input(request.GET.get('month'))
+    monthly_expenses = Expense.objects.filter(user=request.user, date__year=reference_month.year, date__month=reference_month.month)
+    total_expenses = monthly_expenses.aggregate(total=Sum('amount'))['total'] or Decimal('0')
+    income_amount = MonthlyIncome.objects.filter(user=request.user, reference_month=reference_month).aggregate(total=Sum('amount'))['total'] or Decimal('0')
+    balance = income_amount - total_expenses
+    goals_context = goals_context_for_user(request.user, balance)
+    return render_page(
+        request,
+        'gastos/goals.html',
+        active_page='goals',
+        user=user,
+        current_month=month_label(reference_month),
+        current_month_input=month_input(reference_month),
+        monthly_balance_display=money(balance),
+        income_amount_display=money(income_amount),
+        total_expenses_display=money(total_expenses),
+        goal_types=FinancialGoal.GOAL_TYPES,
+        goal_priorities=FinancialGoal.PRIORITY_CHOICES,
+        **goals_context,
+    )
+
+
+@require_POST
+def delete_goal(request, goal_id):
+    user, response = require_session_user(request)
+    if response:
+        return response
+    goal = get_object_or_404(FinancialGoal, id=goal_id, user=request.user)
+    goal.delete()
+    messages.success(request, 'Meta removida.')
+    return redirect('gastos:goals')
 
 
 def monthly(request):
