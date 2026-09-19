@@ -60,6 +60,34 @@
   </div>
 
   <div class="glass mt-4">
+    <div class="flex justify-between items-center" style="gap:1rem;flex-wrap:wrap">
+      <div>
+        <p class="uppercase-tag">Meta principal</p>
+        {% if featured_goal %}
+          <h2 class="font-display text-lg font-semibold mt-2">{{ featured_goal.name }}</h2>
+          <p class="text-sm muted mt-2">
+            {{ featured_goal.saved_amount }} guardados de {{ featured_goal.target_amount }}.
+            Ritmo necessário: {{ featured_goal.required_monthly_amount }}.
+          </p>
+        {% else %}
+          <h2 class="font-display text-lg font-semibold mt-2">Nenhuma meta financeira ativa</h2>
+          <p class="text-sm muted mt-2">Crie uma meta para acompanhar progresso, prazo e ritmo mensal.</p>
+        {% endif %}
+      </div>
+      <a href="{% url 'gastos:goals' %}" class="btn {% if featured_goal %}btn-outline{% else %}btn-primary{% endif %}">
+        {% if featured_goal %}Ver metas{% else %}+ Criar meta{% endif %}
+      </a>
+    </div>
+    {% if featured_goal %}
+      <div class="flex justify-between text-sm mt-4">
+        <span class="muted">{{ featured_goal.remaining_amount }} restantes</span>
+        <strong>{{ featured_goal.progress_percent }}%</strong>
+      </div>
+      <div class="bar-track mt-2"><div class="bar-fill" style="width:{{ featured_goal.progress_percent }}%"></div></div>
+    {% endif %}
+  </div>
+
+  <div class="glass mt-4">
     <div class="flex justify-between items-center mb-4">
       <div>
         <p class="uppercase-tag">Histórico</p>

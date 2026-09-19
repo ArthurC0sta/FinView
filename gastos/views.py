@@ -12,6 +12,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
+from .forms import FinancialGoalForm
 from .ia import gerar_resposta_financeira, groq_configured
 from .models import Expense, FinancialGoal, MonthlyIncome
 
@@ -264,17 +265,25 @@ def format_goal(goal, monthly_balance=None):
     }
 
 
+def goals_for_user(user, *, active_only=False):
+    goals = FinancialGoal.objects.filter(user=user)
+    if active_only:
+        goals = goals.filter(status='active')
+    return goals
+
+
 def active_goals_for_user(user):
-    return FinancialGoal.objects.filter(user=user, status='active')
+    return goals_for_user(user, active_only=True)
 
 
-def goals_context_for_user(user, monthly_balance=None):
-    goals = [format_goal(goal, monthly_balance) for goal in active_goals_for_user(user)]
-    featured_goal = goals[0] if goals else None
+def goals_context_for_user(user, monthly_balance=None, *, active_only=True):
+    queryset = goals_for_user(user, active_only=active_only)
+    formatted_goals = [format_goal(goal, monthly_balance) for goal in queryset]
+    featured_goal = formatted_goals[0] if formatted_goals else None
     return {
-        'goals': goals,
+        'goals': formatted_goals,
         'featured_goal': featured_goal,
-        'goals_count': len(goals),
+        'goals_count': len(formatted_goals),
     }
 
 
@@ -296,7 +305,7 @@ def ai_context_for_month(user, reference_month):
         f"{priority_labels.get(item['priority'], item['priority'])}: {money(item['total'] or Decimal('0'))}"
         for item in priority_items
     ) or 'sem despesas por prioridade'
-    active_goals = list(active_goals_for_user(user)[:3])
+    active_goals = list(active_goals_for_user(user))
     goals = '; '.join(
         (
             f"{goal.name}: alvo {money(goal.target_amount)}, guardado {money(goal.saved_amount)}, "
@@ -579,17 +588,11 @@ def goals(request):
     user, response = require_session_user(request)
     if response:
         return response
-    if request.method == 'POST':
-        FinancialGoal.objects.create(
-            user=request.user,
-            name=request.POST.get('name', '').strip(),
-            target_amount=decimal_from_post(request.POST.get('target_amount')),
-            saved_amount=decimal_from_post(request.POST.get('saved_amount')),
-            target_date=date_from_input(request.POST.get('target_date')) if request.POST.get('target_date') else None,
-            goal_type=request.POST.get('goal_type', 'saving'),
-            priority=request.POST.get('priority', 'medium'),
-            notes=request.POST.get('notes', '').strip(),
-        )
+    form = FinancialGoalForm(request.POST or None)
+    if request.method == 'POST' and form.is_valid():
+        goal = form.save(commit=False)
+        goal.user = request.user
+        goal.save()
         messages.success(request, 'Meta financeira criada com sucesso.')
         return redirect('gastos:goals')
 
@@ -598,7 +601,7 @@ def goals(request):
     total_expenses = monthly_expenses.aggregate(total=Sum('amount'))['total'] or Decimal('0')
     income_amount = MonthlyIncome.objects.filter(user=request.user, reference_month=reference_month).aggregate(total=Sum('amount'))['total'] or Decimal('0')
     balance = income_amount - total_expenses
-    goals_context = goals_context_for_user(request.user, balance)
+    goals_context = goals_context_for_user(request.user, balance, active_only=False)
     return render_page(
         request,
         'gastos/goals.html',
@@ -609,8 +612,7 @@ def goals(request):
         monthly_balance_display=money(balance),
         income_amount_display=money(income_amount),
         total_expenses_display=money(total_expenses),
-        goal_types=FinancialGoal.GOAL_TYPES,
-        goal_priorities=FinancialGoal.PRIORITY_CHOICES,
+        form=form,
         **goals_context,
     )
 

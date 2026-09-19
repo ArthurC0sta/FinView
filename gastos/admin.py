@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Expense, MonthlyIncome, UserProfile
+from .models import Expense, FinancialGoal, MonthlyIncome, UserProfile
 
 
 @admin.register(UserProfile)
@@ -21,3 +21,10 @@ class MonthlyIncomeAdmin(admin.ModelAdmin):
     list_display = ('user', 'amount', 'income_type', 'reference_month')
     list_filter = ('income_type', 'reference_month')
     search_fields = ('user__email', 'user__first_name', 'user__last_name')
+
+
+@admin.register(FinancialGoal)
+class FinancialGoalAdmin(admin.ModelAdmin):
+    list_display = ('name', 'user', 'target_amount', 'saved_amount', 'target_date', 'priority', 'status')
+    list_filter = ('goal_type', 'priority', 'status', 'target_date')
+    search_fields = ('name', 'user__email', 'notes')

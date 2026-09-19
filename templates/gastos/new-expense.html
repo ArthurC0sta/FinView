@@ -17,6 +17,7 @@
   <div class="brand"><a href="{% url 'gastos:landing' %}" class="logo"><span class="dot">F</span><span>FinView <span class="text-gradient">AI</span></span></a></div>
   <a href="{% url 'gastos:dashboard' %}?month={{ current_month_input }}" class="nav-item "><span>📊</span>Dashboard</a>
 <a href="{% url 'gastos:monthly' %}?month={{ current_month_input }}" class="nav-item "><span>📅</span>Mensal</a>
+<a href="{% url 'gastos:goals' %}" class="nav-item "><span>🎯</span>Metas</a>
 <a href="{% url 'gastos:new_expense' %}?month={{ current_month_input }}" class="nav-item active"><span>🧾</span>Nova despesa</a>
 <a href="{% url 'gastos:profile' %}" class="nav-item "><span>👤</span>Perfil</a>
   <div style="margin-top:auto;padding-top:1rem;border-top:1px solid hsl(0 0% 100% / .06)">
@@ -62,7 +63,7 @@
 </script>
 </main>
 </div>
-<nav class="mobile-nav"><a href="{% url 'gastos:dashboard' %}?month={{ current_month_input }}" class=""><span style="font-size:1.1rem">📊</span>Dashboard</a><a href="{% url 'gastos:monthly' %}?month={{ current_month_input }}" class=""><span style="font-size:1.1rem">📅</span>Mensal</a><a href="{% url 'gastos:new_expense' %}?month={{ current_month_input }}" class="active"><span style="font-size:1.1rem">🧾</span>Gasto</a><a href="{% url 'gastos:profile' %}" class=""><span style="font-size:1.1rem">👤</span>Perfil</a></nav>
+<nav class="mobile-nav"><a href="{% url 'gastos:dashboard' %}?month={{ current_month_input }}" class=""><span style="font-size:1.1rem">📊</span>Dashboard</a><a href="{% url 'gastos:monthly' %}?month={{ current_month_input }}" class=""><span style="font-size:1.1rem">📅</span>Mensal</a><a href="{% url 'gastos:goals' %}" class=""><span style="font-size:1.1rem">🎯</span>Metas</a><a href="{% url 'gastos:new_expense' %}?month={{ current_month_input }}" class="active"><span style="font-size:1.1rem">🧾</span>Gasto</a><a href="{% url 'gastos:profile' %}" class=""><span style="font-size:1.1rem">👤</span>Perfil</a></nav>
 
 {% include 'gastos/partials/ai_panel.html' %}
 

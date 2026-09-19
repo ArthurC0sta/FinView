@@ -5,6 +5,7 @@
 
   <a href="{% url 'gastos:dashboard' %}" class="nav-item {% if active_page == 'dashboard' %}active{% endif %}"><span>📊</span>Dashboard</a>
   <a href="{% url 'gastos:monthly' %}" class="nav-item {% if active_page == 'monthly' %}active{% endif %}"><span>📅</span>Mensal</a>
+  <a href="{% url 'gastos:goals' %}" class="nav-item {% if active_page == 'goals' %}active{% endif %}"><span>🎯</span>Metas</a>
   <a href="{% url 'gastos:new_expense' %}" class="nav-item {% if active_page == 'new_expense' %}active{% endif %}"><span>🧾</span>Nova despesa</a>
   <a href="{% url 'gastos:profile' %}" class="nav-item {% if active_page == 'profile' %}active{% endif %}"><span>👤</span>Perfil</a>
 

@@ -46,7 +46,7 @@ function setupAI(){
     requestedInsight = true;
     const body = new URLSearchParams({
       month: panel.dataset.month || '',
-      prompt: 'Analise se os gastos do mes estao alinhados ao objetivo financeiro do usuario. Responda em ate 4 topicos curtos, cada um iniciado por "-": situacao, alinhamento, ponto de atencao e acao pratica.'
+      prompt: 'Analise se os gastos e receitas do mes estao alinhados ao objetivo financeiro e as metas cadastradas do usuario. Responda em ate 5 topicos curtos, cada um iniciado por "-": situacao, meta, viabilidade, ponto de atencao e acao pratica.'
     });
     fetch(panel.dataset.aiUrl, {
       method: 'POST',
