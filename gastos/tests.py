@@ -1,8 +1,11 @@
+import re
 from datetime import timedelta
 from decimal import Decimal
 from types import SimpleNamespace
+from urllib.parse import urlparse
 
 from django.contrib.auth.models import User
+from django.core import mail
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
 from django.test import TestCase, override_settings
@@ -262,6 +265,70 @@ class FinancialGoalContextTests(TestCase):
         self.assertEqual(dashboard_response.status_code, 200)
         self.assertContains(dashboard_response, 'Nenhuma meta financeira ativa')
         self.assertIn('sem metas financeiras cadastradas', ai_context)
+
+
+@override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend')
+class PasswordResetFlowTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username='ana@example.com',
+            email='ana@example.com',
+            password='senha12345',
+        )
+
+    def test_login_aponta_para_recuperacao_de_senha(self):
+        response = self.client.get(reverse('gastos:login'))
+
+        self.assertContains(response, reverse('gastos:password_reset'))
+
+    def test_solicitacao_envia_link_sem_expor_se_conta_existe(self):
+        response = self.client.post(
+            reverse('gastos:password_reset'),
+            {'email': self.user.email},
+        )
+
+        self.assertRedirects(response, reverse('gastos:password_reset_done'))
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertIn('Redefinição de senha', mail.outbox[0].subject)
+        self.assertIn('/reset/', mail.outbox[0].body)
+
+        mail.outbox.clear()
+        response = self.client.post(
+            reverse('gastos:password_reset'),
+            {'email': 'conta-inexistente@example.com'},
+        )
+
+        self.assertRedirects(response, reverse('gastos:password_reset_done'))
+        self.assertEqual(mail.outbox, [])
+
+    def test_usuario_redefine_senha_com_token_valido(self):
+        self.client.post(
+            reverse('gastos:password_reset'),
+            {'email': self.user.email},
+        )
+        reset_url = re.search(r'https?://[^\s]+', mail.outbox[0].body).group(0)
+        token_response = self.client.get(urlparse(reset_url).path)
+
+        self.assertEqual(token_response.status_code, 302)
+        set_password_url = token_response.url
+        response = self.client.post(
+            set_password_url,
+            {
+                'new_password1': 'NovaSenhaSegura2026!',
+                'new_password2': 'NovaSenhaSegura2026!',
+            },
+        )
+
+        self.assertRedirects(response, reverse('gastos:password_reset_complete'))
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.check_password('NovaSenhaSegura2026!'))
+
+    def test_link_invalido_exibe_opcao_para_nova_solicitacao(self):
+        response = self.client.get('/reset/uid-invalido/token-invalido/')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Link inválido ou expirado')
+        self.assertContains(response, reverse('gastos:password_reset'))
 
 
 class GroqIntegrationTests(TestCase):

@@ -1,9 +1,42 @@
 from decimal import Decimal
 
 from django import forms
+from django.contrib.auth.forms import PasswordResetForm, SetPasswordForm
 from django.utils import timezone
 
 from .models import FinancialGoal
+
+
+class FinViewPasswordResetForm(PasswordResetForm):
+    """Adapta o formulario nativo de recuperacao ao visual do FinView."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['email'].widget.attrs.update(
+            {
+                'class': 'input',
+                'placeholder': 'voce@email.com',
+                'autocomplete': 'email',
+                'autocapitalize': 'none',
+                'spellcheck': 'false',
+                'autofocus': True,
+            }
+        )
+
+
+class FinViewSetPasswordForm(SetPasswordForm):
+    """Mantem as validacoes do Django com os campos visuais do projeto."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields.values():
+            field.widget.attrs.update(
+                {
+                    'class': 'input',
+                    'autocomplete': 'new-password',
+                    'placeholder': '••••••••',
+                }
+            )
 
 
 class FinancialGoalForm(forms.ModelForm):
