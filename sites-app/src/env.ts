@@ -4,9 +4,6 @@ export interface Env {
   ASSETS: Fetcher
   RESEND_API_KEY: string
   RESEND_FROM_EMAIL: string
-  REMENTE_PROVISORIO?: string
-  REMETENTE_PROVISORIO?: string
-  SENHA_REMENTE_PROVISORIO?: string
   SESSION_SECRET: string
   OTP_PEPPER: string
   GROQ_API_KEY: string

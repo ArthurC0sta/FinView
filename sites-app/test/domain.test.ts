@@ -18,18 +18,6 @@ describe('cryptographic primitives', () => {
 })
 
 describe('email transport', () => {
-  it('uses the provisional iCloud sender when both values are configured', () => {
-    const transport = resolveEmailTransport({
-      REMENTE_PROVISORIO: 'finview@icloud.com',
-      SENHA_REMENTE_PROVISORIO: 'app-password',
-    } as Env)
-    expect(transport).toMatchObject({ mode: 'icloud', sender: 'finview@icloud.com' })
-  })
-
-  it('rejects a partial provisional sender instead of silently using Resend', () => {
-    expect(() => resolveEmailTransport({ REMENTE_PROVISORIO: 'finview@icloud.com' } as Env)).toThrow('incompleto')
-  })
-
   it('keeps Resend as the default transport', () => {
     const transport = resolveEmailTransport({ RESEND_API_KEY: 'test-key', RESEND_FROM_EMAIL: 'FinView <onboarding@resend.dev>' } as Env)
     expect(transport).toMatchObject({ mode: 'resend' })

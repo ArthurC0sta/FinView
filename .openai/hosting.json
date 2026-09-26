@@ -1,11 +1,5 @@
 {
   "project_id": "appgprj_6ab834f6053c81919ffb3b0f2932ae79",
   "d1": "DB",
-  "r2": "UPLOADS",
-  "static": {
-    "directory": "sites-app/dist"
-  },
-  "worker": {
-    "entrypoint": "sites-app/dist/_worker.js"
-  }
+  "r2": "UPLOADS"
 }

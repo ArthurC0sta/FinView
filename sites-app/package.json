@@ -6,8 +6,8 @@
   "scripts": {
     "dev": "wrangler dev",
     "build:client": "vite build",
-    "build:worker": "esbuild src/worker.ts --bundle --format=esm --platform=browser --target=es2022 --external:cloudflare:* --outfile=dist/_worker.js",
-    "build": "npm run build:client && npm run build:worker && node scripts/copy-hosting.mjs",
+    "build:worker": "esbuild src/worker.ts --bundle --format=esm --platform=browser --target=es2022 --outfile=dist/server/index.js",
+    "build": "node scripts/prepare-build.mjs && npm run build:client && npm run build:worker",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "check:secrets": "node scripts/check-secrets.mjs",
