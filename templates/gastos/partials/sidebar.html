@@ -3,13 +3,26 @@
     {% include 'gastos/partials/logo.html' %}
   </div>
 
-  <a href="{% url 'gastos:dashboard' %}" class="nav-item {% if active_page == 'dashboard' %}active{% endif %}"><span>📊</span>Dashboard</a>
-  <a href="{% url 'gastos:monthly' %}" class="nav-item {% if active_page == 'monthly' %}active{% endif %}"><span>📅</span>Mensal</a>
-  <a href="{% url 'gastos:goals' %}" class="nav-item {% if active_page == 'goals' %}active{% endif %}"><span>🎯</span>Metas</a>
-  <a href="{% url 'gastos:new_expense' %}" class="nav-item {% if active_page == 'new_expense' %}active{% endif %}"><span>🧾</span>Nova despesa</a>
-  <a href="{% url 'gastos:profile' %}" class="nav-item {% if active_page == 'profile' %}active{% endif %}"><span>👤</span>Perfil</a>
+  <div class="business-switcher">
+    <span>Empresa atual</span>
+    <strong>{{ current_business.name|default:'Meu negócio' }}</strong>
+    <small>Proprietário</small>
+  </div>
+
+  <nav class="sidebar-nav" aria-label="Navegação principal">
+    <a href="{% url 'gastos:dashboard' %}" class="nav-item {% if active_page == 'dashboard' %}active{% endif %}" {% if active_page == 'dashboard' %}aria-current="page"{% endif %}><i class="ph ph-squares-four"></i><span>Visão geral</span></a>
+    <a href="{% url 'gastos:monthly' %}" class="nav-item {% if active_page == 'monthly' %}active{% endif %}" {% if active_page == 'monthly' %}aria-current="page"{% endif %}><i class="ph ph-receipt"></i><span>Movimentações</span></a>
+    <a href="{% url 'gastos:imports' %}" class="nav-item {% if active_page == 'imports' %}active{% endif %}" {% if active_page == 'imports' %}aria-current="page"{% endif %}><i class="ph ph-upload-simple"></i><span>Importar dados</span></a>
+    <a href="{% url 'gastos:goals' %}" class="nav-item {% if active_page == 'goals' %}active{% endif %}" {% if active_page == 'goals' %}aria-current="page"{% endif %}><i class="ph ph-target"></i><span>Metas</span></a>
+    <a href="{% url 'gastos:new_expense' %}" class="nav-item {% if active_page == 'new_expense' %}active{% endif %}" {% if active_page == 'new_expense' %}aria-current="page"{% endif %}><i class="ph ph-plus-circle"></i><span>Nova despesa</span></a>
+    <a href="{% url 'gastos:profile' %}" class="nav-item {% if active_page == 'profile' %}active{% endif %}" {% if active_page == 'profile' %}aria-current="page"{% endif %}><i class="ph ph-user-circle"></i><span>Perfil</span></a>
+  </nav>
 
   <div class="sidebar-footer">
-    <a href="{% url 'gastos:logout' %}" class="nav-item">↩ Sair</a>
+    <p>Análise gerencial</p>
+    <form method="post" action="{% url 'gastos:logout' %}">
+      {% csrf_token %}
+      <button type="submit" class="nav-item sidebar-logout"><i class="ph ph-sign-out"></i><span>Sair</span></button>
+    </form>
   </div>
 </aside>

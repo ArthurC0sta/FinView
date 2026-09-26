@@ -1,196 +1,23 @@
 {% extends 'gastos/app.html' %}
-
-{% block title %}Dashboard — FinView AI{% endblock %}
-{% block description %}Visualize seu mês financeiro com inteligência.{% endblock %}
-
+{% block title %}Visão geral | FinView{% endblock %}
+{% block description %}Acompanhe o fluxo de caixa realizado da sua empresa.{% endblock %}
 {% block app_content %}
-<div style="max-width:1400px">
-  <div class="flex justify-between items-center" style="flex-wrap:wrap;gap:1rem;margin-bottom:1.5rem">
-    <div>
-      <p class="uppercase-tag">{{ current_month }}</p>
-      <h1 class="font-display text-4xl font-bold mt-2">Dashboard Financeiro</h1>
-      <p class="muted mt-2">Olá, {{ user.name }}. Acompanhe renda, gastos, saldo e prioridades com dados reais.</p>
-    </div>
-    <a href="{% url 'gastos:new_expense' %}?month={{ current_month_input }}" class="btn btn-primary">+ Nova despesa</a>
+<div class="product-page dashboard-page">
+  <header class="product-header">
+    <div><p class="business-context">{{ current_business.name }} <span>/</span> {{ current_month }}</p><h1>Visão geral</h1><p>Fluxo de caixa realizado, com base nos lançamentos confirmados.</p></div>
+    <div class="header-actions"><a href="{% url 'gastos:imports' %}" class="product-btn secondary"><i class="ph ph-upload-simple"></i> Importar dados</a><a href="{% url 'gastos:monthly' %}?month={{ current_month_input }}" class="product-btn secondary"><i class="ph ph-list-dashes"></i> Ver lançamentos</a><a href="{% url 'gastos:new_expense' %}?month={{ current_month_input }}" class="product-btn primary"><i class="ph ph-plus"></i> Nova despesa</a></div>
+  </header>
+  <section class="context-strip" aria-label="Contexto da leitura"><div><span>Período</span><strong>{{ current_month }}</strong></div><div><span>Regime</span><strong>Fluxo de caixa realizado</strong></div><div><span>Qualidade dos dados</span><strong>{% if income_amount_display == 'R$ 0,00' %}Dados insuficientes{% else %}Dados disponíveis{% endif %}</strong></div></section>
+  <section class="cash-overview" aria-labelledby="cash-title"><div class="cash-primary"><p class="section-kicker">Situação atual do caixa</p><h2 id="cash-title">{{ balance_display }}</h2><p>Saldo do período após entradas e saídas realizadas.</p></div><dl class="cash-values"><div><dt>Entradas realizadas</dt><dd>{{ income_amount_display }}</dd></div><div><dt>Saídas realizadas</dt><dd>{{ total_expenses_display }}</dd></div><div><dt>Saldo final</dt><dd>{{ balance_display }}</dd></div></dl></section>
+  <section class="priority-alert" aria-labelledby="alert-title"><div class="alert-symbol"><i class="ph ph-warning"></i></div><div><p class="section-kicker">Insight prioritário</p><h2 id="alert-title">{{ alert.title }}</h2><p>{{ alert.message }}</p></div><button type="button" class="text-action" onclick="document.getElementById('aiToggle').click()">Analisar contexto <i class="ph ph-arrow-right"></i></button></section>
+  <div class="dashboard-grid overview-grid">
+    <section class="product-surface" aria-labelledby="composition-title"><div class="section-heading"><div><p class="section-kicker">Composição financeira</p><h2 id="composition-title">Saídas por categoria</h2></div><strong>{{ total_expenses_display }}</strong></div><div class="composition-list">{% for category in category_summaries %}<div><span class="category-mark" style="--mark:{{ category.color }}"></span><p><strong>{{ category.name }}</strong><small>{{ category.percent }}% das saídas</small></p><b>{{ category.amount }}</b></div>{% empty %}<div class="empty-state"><i class="ph ph-receipt"></i><strong>Nenhuma saída neste período</strong><p>Cadastre uma despesa para visualizar a composição financeira.</p></div>{% endfor %}</div></section>
+    <section class="product-surface recent-expenses" aria-labelledby="expenses-title"><div class="section-heading"><div><p class="section-kicker">Lançamentos</p><h2 id="expenses-title">Principais despesas</h2></div><a href="{% url 'gastos:monthly' %}?month={{ current_month_input }}">Ver todas</a></div><div class="expense-preview-list">{% for expense in top_expenses %}<div><span class="expense-mark">{{ expense.initial }}</span><p><strong>{{ expense.name }}</strong><small>{{ expense.category }}</small></p><b>{{ expense.amount }}</b></div>{% empty %}<div class="empty-state"><i class="ph ph-plus-circle"></i><strong>Nenhuma despesa registrada</strong><p>O primeiro lançamento aparecerá aqui.</p></div>{% endfor %}</div></section>
   </div>
-
-  <div class="grid g4">
-    <div class="glass">
-      <div class="flex justify-between items-center">
-        <div>
-          <p class="text-xs muted">Renda mensal</p>
-          <p class="font-display text-2xl font-bold mt-2">{{ income_amount_display }}</p>
-          <p class="text-xs mt-2 muted">Base para o cruzamento</p>
-        </div>
-        <div class="kpi-icon">💰</div>
-      </div>
-    </div>
-    <div class="glass">
-      <div class="flex justify-between items-center">
-        <div>
-          <p class="text-xs muted">Total de gastos</p>
-          <p class="font-display text-2xl font-bold mt-2">{{ total_expenses_display }}</p>
-          <p class="text-xs mt-2 muted">{{ committed }}% da renda</p>
-        </div>
-        <div class="kpi-icon sec">📉</div>
-      </div>
-      <div class="bar-track mt-4"><div class="bar-fill" style="width:{{ committed_bar }}%"></div></div>
-    </div>
-    <div class="glass">
-      <div class="flex justify-between items-center">
-        <div>
-          <p class="text-xs muted">Saldo restante</p>
-          <p class="font-display text-2xl font-bold mt-2">{{ balance_display }}</p>
-          <p class="text-xs mt-2 muted">Renda - gastos</p>
-        </div>
-        <div class="kpi-icon acc">🐷</div>
-      </div>
-    </div>
-    <div class="glass">
-      <div class="flex justify-between items-center">
-        <div>
-          <p class="text-xs muted">Score financeiro</p>
-          <p class="font-display text-2xl font-bold mt-2">{{ score }}/100</p>
-          <p class="text-xs mt-2 muted">{{ score_label }}</p>
-        </div>
-        <div class="kpi-icon warn">🏆</div>
-      </div>
-      <div class="bar-track mt-4"><div class="bar-fill" style="width:{{ score_bar }}%"></div></div>
-    </div>
+  <div class="dashboard-grid lower-grid">
+    <section class="product-surface" aria-labelledby="history-title"><div class="section-heading"><div><p class="section-kicker">Comparação temporal</p><h2 id="history-title">Histórico realizado</h2></div><span>Períodos com registro</span></div><div class="history-chart">{% for month in monthly_history %}<div class="history-column"><div class="history-bar-wrap" title="Saídas: {{ month.expenses_display }}. Entradas: {{ month.income_display }}. Saldo: {{ month.balance_display }}"><i style="height:{{ month.height }}%"></i></div><span>{{ month.label }}</span><small>{{ month.expenses_display }}</small></div>{% empty %}<div class="empty-state"><i class="ph ph-chart-bar"></i><strong>Histórico ainda indisponível</strong><p>Novos períodos serão exibidos conforme os lançamentos forem registrados.</p></div>{% endfor %}</div></section>
+    <section class="product-surface goal-summary" aria-labelledby="goal-title"><div class="section-heading"><div><p class="section-kicker">Meta empresarial</p><h2 id="goal-title">{% if featured_goal %}{{ featured_goal.name }}{% else %}Nenhuma meta financeira ativa{% endif %}</h2></div></div>{% if featured_goal %}<div class="goal-value"><strong>{{ featured_goal.saved_amount }}</strong><span>de {{ featured_goal.target_amount }}</span></div><div class="goal-progress" role="progressbar" aria-label="Progresso da meta" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ featured_goal.progress_percent }}"><i style="width:{{ featured_goal.progress_percent }}%"></i></div><dl class="goal-details"><div><dt>Falta</dt><dd>{{ featured_goal.remaining_amount }}</dd></div><div><dt>Ritmo necessário</dt><dd>{{ featured_goal.required_monthly_amount }}</dd></div></dl>{% else %}<p class="empty-copy">Crie uma meta para acompanhar valor, prazo e ritmo mensal.</p>{% endif %}<a href="{% url 'gastos:goals' %}" class="product-btn secondary">{% if featured_goal %}Ver metas{% else %}Criar meta{% endif %}</a><p class="context-note"><i class="ph ph-info"></i> Reserva de caixa não representa lucro acumulado.</p></section>
   </div>
-
-  <div class="glass mt-4">
-    <div class="flex justify-between items-center" style="gap:1rem;flex-wrap:wrap">
-      <div>
-        <p class="uppercase-tag">Meta principal</p>
-        {% if featured_goal %}
-          <h2 class="font-display text-lg font-semibold mt-2">{{ featured_goal.name }}</h2>
-          <p class="text-sm muted mt-2">
-            {{ featured_goal.saved_amount }} guardados de {{ featured_goal.target_amount }}.
-            Ritmo necessário: {{ featured_goal.required_monthly_amount }}.
-          </p>
-        {% else %}
-          <h2 class="font-display text-lg font-semibold mt-2">Nenhuma meta financeira ativa</h2>
-          <p class="text-sm muted mt-2">Crie uma meta para acompanhar progresso, prazo e ritmo mensal.</p>
-        {% endif %}
-      </div>
-      <a href="{% url 'gastos:goals' %}" class="btn {% if featured_goal %}btn-outline{% else %}btn-primary{% endif %}">
-        {% if featured_goal %}Ver metas{% else %}+ Criar meta{% endif %}
-      </a>
-    </div>
-    {% if featured_goal %}
-      <div class="flex justify-between text-sm mt-4">
-        <span class="muted">{{ featured_goal.remaining_amount }} restantes</span>
-        <strong>{{ featured_goal.progress_percent }}%</strong>
-      </div>
-      <div class="bar-track mt-2"><div class="bar-fill" style="width:{{ featured_goal.progress_percent }}%"></div></div>
-    {% endif %}
-  </div>
-
-  <div class="glass mt-4">
-    <div class="flex justify-between items-center mb-4">
-      <div>
-        <p class="uppercase-tag">Histórico</p>
-        <h3 class="font-display font-semibold text-lg mt-2">Evolução de gastos</h3>
-      </div>
-      <span class="chip">Períodos com registro</span>
-    </div>
-    <div class="flex" style="gap:.8rem;height:190px;align-items:flex-end">
-      {% for month in monthly_history %}
-        <div style="display:flex;flex-direction:column;align-items:center;gap:.45rem;flex:1;min-width:0">
-          <div title="Gastos: {{ month.expenses_display }} | Renda: {{ month.income_display }} | Saldo: {{ month.balance_display }}" style="width:100%;max-width:38px;height:145px;display:flex;align-items:flex-end">
-            {% if month.has_expenses %}
-              <div style="width:100%;height:{{ month.height }}%;background:var(--gradient-primary);border-radius:.4rem .4rem 0 0"></div>
-            {% endif %}
-          </div>
-          <span class="text-xs muted">{{ month.label }}</span>
-        </div>
-      {% empty %}
-        <div class="muted text-sm" style="align-self:center;text-align:center;width:100%">Nenhum gasto registrado.</div>
-      {% endfor %}
-    </div>
-  </div>
-
-  <div class="grid g2 mt-4">
-    <div class="glass">
-      <h3 class="font-display font-semibold mb-4">Gastos por categoria</h3>
-      <div class="grid g2" style="align-items:center;gap:1rem">
-        <div style="display:grid;place-items:center">
-          <div style="width:210px;max-width:100%;aspect-ratio:1;border-radius:50%;background:{{ category_gradient }};display:grid;place-items:center">
-            <div class="text-center" style="width:132px;aspect-ratio:1;border-radius:50%;background:hsl(265 47% 6% / .88);display:grid;place-items:center;align-content:center">
-              <p class="font-display text-lg font-bold">{{ total_expenses_display }}</p>
-              <p class="text-xs muted">total</p>
-            </div>
-          </div>
-        </div>
-        <div>
-          {% for category in category_summaries %}
-            <div style="padding:.45rem 0">
-              <div class="flex items-center justify-between text-sm">
-                <span><span class="legend-dot" style="background:{{ category.color }}"></span>{{ category.name }}</span>
-                <span class="muted">{{ category.amount }} · {{ category.percent }}%</span>
-              </div>
-              <div class="bar-track mt-2"><div style="width:{{ category.bar_width }}%;height:100%;background:{{ category.color }};border-radius:9999px"></div></div>
-            </div>
-          {% empty %}
-            <p class="text-sm muted">Nenhuma categoria registrada ainda.</p>
-          {% endfor %}
-        </div>
-      </div>
-    </div>
-
-    <div class="glass">
-      <h3 class="font-display font-semibold mb-4">Gastos por prioridade</h3>
-      {% for priority in priority_summaries %}
-        <div style="margin-bottom:1rem">
-          <div class="flex justify-between text-sm mb-2"><span>{{ priority.name }}</span><span class="muted">{{ priority.amount }} · {{ priority.percent }}%</span></div>
-          <div class="bar-track"><div style="width:{{ priority.bar_width }}%;height:100%;background:{{ priority.color }};border-radius:9999px"></div></div>
-        </div>
-      {% empty %}
-        <p class="text-sm muted">Nenhuma prioridade registrada ainda.</p>
-      {% endfor %}
-    </div>
-
-    <div class="glass">
-      <h3 class="font-display font-semibold mb-4">Fixos vs Variáveis</h3>
-      {% for recurrence in recurrence_summaries %}
-        <div style="margin-bottom:1rem">
-          <div class="flex justify-between text-sm mb-2"><span>{{ recurrence.name }}</span><span class="muted">{{ recurrence.amount }} · {{ recurrence.percent }}%</span></div>
-          <div class="bar-track"><div style="width:{{ recurrence.bar_width }}%;height:100%;background:{{ recurrence.color }};border-radius:9999px"></div></div>
-        </div>
-      {% empty %}
-        <p class="text-sm muted">Nenhuma despesa registrada ainda.</p>
-      {% endfor %}
-    </div>
-
-    <div class="glass">
-      <div class="flex justify-between items-center mb-4">
-        <h3 class="font-display font-semibold">Principais despesas</h3>
-        <span class="text-xs muted">Top 5</span>
-      </div>
-      {% for expense in top_expenses %}
-        <div class="list-row">
-          <div class="flex items-center gap-3">
-            <div class="avatar-init">{{ expense.initial }}</div>
-            <div>
-              <p class="text-sm font-medium">{{ expense.name }}</p>
-              <p class="text-xs muted">{{ expense.category }}</p>
-            </div>
-          </div>
-          <p class="font-display font-bold">{{ expense.amount }}</p>
-        </div>
-      {% empty %}
-        <p class="text-sm muted">Nenhuma despesa registrada ainda.</p>
-      {% endfor %}
-    </div>
-  </div>
-
-  <div class="alert mt-4">
-    <div class="alert-icon">⚠</div>
-    <div>
-      <h4 class="font-display font-semibold">{{ alert.title }}</h4>
-      <p class="text-sm muted mt-2">{{ alert.message }}</p>
-    </div>
-  </div>
+  <p class="product-disclaimer"><i class="ph ph-shield-check"></i><span>Leitura gerencial baseada nos dados registrados. Não constitui escrituração contábil nem substitui contador habilitado.</span></p>
 </div>
 {% endblock %}

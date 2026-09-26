@@ -7,19 +7,257 @@ from urllib.parse import urlparse
 from django.contrib.auth.models import User
 from django.core import mail
 from django.core.exceptions import ValidationError
-from django.db import IntegrityError
 from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 from unittest.mock import patch
 
-from .ia import gerar_resposta_financeira
-from .models import FinancialGoal, MonthlyIncome
+from .ia import classificar_descricoes, carregar_prompt_consultor, gerar_resposta_financeira
+from .models import (
+    Business,
+    BusinessProfileAssessment,
+    FinancialGoal,
+    FinancialTransaction,
+    ManagerialCategory,
+    MonthlyIncome,
+)
+
+
+def complete_profile(user):
+    business = user.businesses.get(is_default=True)
+    return BusinessProfileAssessment.objects.create(
+        business=business,
+        maturity_answers={'records': '1'},
+        score=12,
+        recommended_level=BusinessProfileAssessment.Level.MANAGERIAL,
+        status=BusinessProfileAssessment.Status.COMPLETED,
+        completed_at=timezone.now(),
+    )
 from .views import (
     active_goals_for_user,
     ai_context_for_month,
     current_month_date,
+    ensure_fixed_expenses_for_month,
 )
+
+
+class BusinessCoreModelTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username='empresa@example.com',
+            email='empresa@example.com',
+            password='senha12345',
+        )
+        self.business = self.user.businesses.get(is_default=True)
+
+    def test_usuario_possui_uma_empresa_padrao(self):
+        self.assertEqual(Business.objects.filter(owner=self.user, is_default=True).count(), 1)
+
+    def test_categoria_tem_nome_visivel_e_grupo_gerencial(self):
+        category = ManagerialCategory.objects.create(
+            business=self.business,
+            name='Software',
+            group=ManagerialCategory.Group.ADMINISTRATIVE,
+        )
+
+        self.assertEqual(category.name, 'Software')
+        self.assertEqual(category.group, ManagerialCategory.Group.ADMINISTRATIVE)
+
+    def test_movimentacao_exige_valor_positivo(self):
+        category = ManagerialCategory.objects.create(
+            business=self.business,
+            name='Não classificadas',
+            group=ManagerialCategory.Group.UNCLASSIFIED,
+        )
+        transaction = FinancialTransaction(
+            business=self.business,
+            created_by=self.user,
+            direction=FinancialTransaction.Direction.OUTFLOW,
+            name='Valor inválido',
+            amount=Decimal('0.00'),
+            date=timezone.localdate(),
+            category=category,
+        )
+
+        with self.assertRaises(ValidationError):
+            transaction.full_clean()
+
+
+class BusinessCoreFlowTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username='gestora@example.com',
+            email='gestora@example.com',
+            password='senha12345',
+        )
+        self.other_user = User.objects.create_user(
+            username='outra@example.com',
+            email='outra@example.com',
+            password='senha12345',
+        )
+        self.business = self.user.businesses.get(is_default=True)
+        self.category = ManagerialCategory.objects.create(
+            business=self.business,
+            name='Software',
+            group=ManagerialCategory.Group.ADMINISTRATIVE,
+        )
+        complete_profile(self.user)
+        self.client.force_login(self.user)
+
+    def transaction(self, *, direction, amount, name='Lançamento', date=None, recurrence='variable'):
+        return FinancialTransaction.objects.create(
+            business=self.business,
+            created_by=self.user,
+            direction=direction,
+            name=name,
+            amount=amount,
+            date=date or current_month_date(),
+            category=self.category,
+            recurrence=recurrence,
+        )
+
+    def test_cadastro_de_despesa_grava_movimentacao_da_empresa(self):
+        response = self.client.post(
+            reverse('gastos:new_expense'),
+            {
+                'name': 'Hospedagem',
+                'amount': '149,90',
+                'date': current_month_date().isoformat(),
+                'category': 'Infraestrutura',
+                'recurrence': 'fixed',
+                'priority': 'important',
+                'notes': 'Servidor da aplicação',
+            },
+        )
+
+        transaction = FinancialTransaction.objects.get(name='Hospedagem')
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(transaction.business, self.business)
+        self.assertEqual(transaction.created_by, self.user)
+        self.assertEqual(transaction.direction, FinancialTransaction.Direction.OUTFLOW)
+        self.assertEqual(transaction.amount, Decimal('149.90'))
+        self.assertEqual(transaction.category.name, 'Infraestrutura')
+        self.assertEqual(transaction.category.group, ManagerialCategory.Group.UNCLASSIFIED)
+
+    def test_valores_nao_positivos_sao_rejeitados_nos_fluxos(self):
+        month = current_month_date()
+        income_response = self.client.post(
+            reverse('gastos:monthly'),
+            {'reference_month': month.strftime('%Y-%m'), 'income_amount': '0', 'income_type': 'fixed'},
+        )
+        expense_response = self.client.post(
+            reverse('gastos:new_expense'),
+            {
+                'name': 'Inválida',
+                'amount': '-10',
+                'date': month.isoformat(),
+                'category': 'Outros',
+            },
+        )
+
+        self.assertEqual(income_response.status_code, 302)
+        self.assertEqual(expense_response.status_code, 302)
+        self.assertFalse(FinancialTransaction.objects.filter(business=self.business).exists())
+
+    def test_edicao_e_exclusao_de_outra_empresa_retornam_404(self):
+        other_business = self.other_user.businesses.get(is_default=True)
+        other_category = ManagerialCategory.objects.create(
+            business=other_business,
+            name='Outros',
+        )
+        other_transaction = FinancialTransaction.objects.create(
+            business=other_business,
+            created_by=self.other_user,
+            direction=FinancialTransaction.Direction.OUTFLOW,
+            name='Dado protegido',
+            amount='80.00',
+            date=current_month_date(),
+            category=other_category,
+        )
+
+        edit_response = self.client.post(
+            reverse('gastos:edit_expense', args=[other_transaction.id]),
+            {
+                'name': 'Tentativa',
+                'amount': '1.00',
+                'date': current_month_date().isoformat(),
+                'category': 'Outros',
+            },
+        )
+        delete_response = self.client.post(
+            reverse('gastos:delete_expense', args=[other_transaction.id]),
+        )
+
+        other_transaction.refresh_from_db()
+        self.assertEqual(edit_response.status_code, 404)
+        self.assertEqual(delete_response.status_code, 404)
+        self.assertEqual(other_transaction.name, 'Dado protegido')
+
+    def test_dashboard_calcula_totais_apenas_com_movimentacoes(self):
+        month = current_month_date()
+        self.transaction(direction=FinancialTransaction.Direction.INFLOW, amount='3000.00', name='Receita', date=month)
+        self.transaction(direction=FinancialTransaction.Direction.OUTFLOW, amount='750.00', name='Despesa', date=month)
+        MonthlyIncome.objects.create(user=self.user, amount='9999.00', income_type='fixed', reference_month=month)
+
+        response = self.client.get(reverse('gastos:dashboard'), {'month': month.strftime('%Y-%m')})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['income_amount_display'], 'R$ 3.000,00')
+        self.assertEqual(response.context['total_expenses_display'], 'R$ 750,00')
+        self.assertEqual(response.context['balance_display'], 'R$ 2.250,00')
+
+    def test_recorrencia_fixa_nao_duplica_no_mes_destino(self):
+        source_month = current_month_date()
+        if source_month.month == 12:
+            target_month = source_month.replace(year=source_month.year + 1, month=1)
+        else:
+            target_month = source_month.replace(month=source_month.month + 1)
+        self.transaction(
+            direction=FinancialTransaction.Direction.OUTFLOW,
+            amount='200.00',
+            name='Contabilidade',
+            date=source_month,
+            recurrence='fixed',
+        )
+
+        ensure_fixed_expenses_for_month(self.user, target_month)
+        ensure_fixed_expenses_for_month(self.user, target_month)
+
+        self.assertEqual(
+            FinancialTransaction.objects.filter(
+                business=self.business,
+                name='Contabilidade',
+                date__year=target_month.year,
+                date__month=target_month.month,
+            ).count(),
+            1,
+        )
+
+    def test_meta_e_contexto_da_ia_usam_empresa_corrente(self):
+        month = current_month_date()
+        self.transaction(direction=FinancialTransaction.Direction.INFLOW, amount='4000.00', name='Receita', date=month)
+        self.transaction(direction=FinancialTransaction.Direction.OUTFLOW, amount='1000.00', name='Software', date=month)
+        response = self.client.post(
+            reverse('gastos:goals'),
+            {
+                'name': 'Reserva empresarial',
+                'target_amount': '10000.00',
+                'saved_amount': '1000.00',
+                'target_date': '',
+                'goal_type': 'emergency',
+                'priority': 'high',
+                'status': 'active',
+                'notes': '',
+            },
+        )
+
+        goal = FinancialGoal.objects.get(name='Reserva empresarial')
+        context = ai_context_for_month(self.user, month)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(goal.business, self.business)
+        self.assertIn('Renda cadastrada: R$ 4.000,00', context)
+        self.assertIn('Total de despesas: R$ 1.000,00', context)
+        self.assertIn('Reserva empresarial', context)
 
 
 class FinancialGoalModelTests(TestCase):
@@ -91,6 +329,7 @@ class FinancialGoalViewTests(TestCase):
             email='bia@example.com',
             password='senha12345',
         )
+        complete_profile(self.user)
         self.client.force_login(self.user)
 
     def goal_data(self, **overrides):
@@ -225,6 +464,7 @@ class FinancialGoalContextTests(TestCase):
             email='ana@example.com',
             password='senha12345',
         )
+        complete_profile(self.user)
 
     def create_goal(self, name, status='active'):
         return FinancialGoal.objects.create(
@@ -332,7 +572,25 @@ class PasswordResetFlowTests(TestCase):
 
 
 class GroqIntegrationTests(TestCase):
-    @override_settings(GROQ_API_KEY='test-key', GROQ_MODEL='test-model')
+    def tearDown(self):
+        carregar_prompt_consultor.cache_clear()
+
+    def test_prompt_da_api_carrega_skill_local_com_limites_consultivos(self):
+        prompt = carregar_prompt_consultor()
+
+        self.assertIn('estudos de mercado', prompt)
+        self.assertIn('mestrado e doutorado', prompt)
+        self.assertIn('consultiva e educacional', prompt)
+        self.assertIn('contador habilitado', prompt)
+        self.assertIn('deve ser verificada', prompt)
+
+    @override_settings(
+        GROQ_API_KEY='test-key',
+        GROQ_MODEL='legacy-model',
+        GROQ_ANALYSIS_MODEL='analysis-model',
+        GROQ_CLASSIFICATION_MODEL='classification-model',
+        GROQ_TIMEOUT_SECONDS=20,
+    )
     @patch('gastos.ia.Groq')
     def test_gerar_resposta_financeira_usa_chave_e_modelo_configurados(self, groq_mock):
         groq_mock.return_value.chat.completions.create.return_value = SimpleNamespace(
@@ -346,15 +604,50 @@ class GroqIntegrationTests(TestCase):
         response = gerar_resposta_financeira('Analise meu mes.', 'Renda: R$ 1000')
 
         self.assertEqual(response, 'Insight financeiro gerado.')
-        groq_mock.assert_called_once_with(api_key='test-key')
+        groq_mock.assert_called_once_with(api_key='test-key', timeout=20, max_retries=1)
         groq_mock.return_value.chat.completions.create.assert_called_once()
         call_kwargs = groq_mock.return_value.chat.completions.create.call_args.kwargs
-        self.assertEqual(call_kwargs['model'], 'test-model')
+        self.assertEqual(call_kwargs['model'], 'analysis-model')
+        self.assertIn('consultor contábil e financeiro', call_kwargs['messages'][0]['content'])
         self.assertEqual(call_kwargs['messages'][-1]['content'], 'Analise meu mes.')
+        self.assertFalse(call_kwargs['include_reasoning'])
+
+    @override_settings(
+        GROQ_API_KEY='test-key',
+        GROQ_CLASSIFICATION_MODEL='openai/gpt-oss-20b',
+        GROQ_TIMEOUT_SECONDS=20,
+    )
+    @patch('gastos.ia.Groq')
+    def test_classificacao_usa_20b_e_descarta_categoria_fora_da_lista(self, groq_mock):
+        groq_mock.return_value.chat.completions.create.return_value = SimpleNamespace(
+            choices=[
+                SimpleNamespace(
+                    message=SimpleNamespace(
+                        content=(
+                            '{"suggestions": ['
+                            '{"index": 0, "category_id": 7, "confidence": 0.91},'
+                            '{"index": 1, "category_id": 999, "confidence": 0.99}'
+                            ']}'
+                        )
+                    )
+                )
+            ]
+        )
+
+        result = classificar_descricoes(
+            ['Hospedagem do site', 'Descrição desconhecida'],
+            [{'id': 7, 'name': 'Sistemas'}],
+        )
+
+        self.assertEqual(result, [{'index': 0, 'category_id': 7, 'confidence': 0.91}])
+        call_kwargs = groq_mock.return_value.chat.completions.create.call_args.kwargs
+        self.assertEqual(call_kwargs['model'], 'openai/gpt-oss-20b')
+        self.assertTrue(call_kwargs['response_format']['json_schema']['strict'])
 
     @override_settings(GROQ_API_KEY='')
     def test_endpoint_informa_quando_api_key_nao_esta_configurada(self):
         user = User.objects.create_user(username='ana@example.com', email='ana@example.com', password='senha12345')
+        complete_profile(user)
         self.client.force_login(user)
 
         response = self.client.post(reverse('gastos:ai_financial_insight'))
@@ -362,40 +655,46 @@ class GroqIntegrationTests(TestCase):
         self.assertEqual(response.status_code, 503)
         self.assertIn('Configure API_KEY', response.json()['message'])
 
-    def test_contexto_da_ia_inclui_objetivo_financeiro(self):
+    def test_contexto_da_ia_inclui_objetivo_empresarial_sem_identificacao(self):
         user = User.objects.create_user(username='ana@example.com', email='ana@example.com', password='senha12345')
-        user.profile.goal = 'Reduzir dívidas'
-        user.profile.save()
+        business = user.businesses.get(is_default=True)
+        business.business_goal = 'Aumentar a previsibilidade do caixa'
+        business.save()
 
         contexto = ai_context_for_month(user, current_month_date())
 
-        self.assertIn('Objetivo financeiro: Reduzir dívidas', contexto)
+        self.assertIn('Objetivo empresarial: Aumentar a previsibilidade do caixa', contexto)
+        self.assertNotIn('ana@example.com', contexto)
 
     def test_usuario_pode_cadastrar_multiplas_rendas_no_mes(self):
         user = User.objects.create_user(username='ana@example.com', email='ana@example.com', password='senha12345')
+        complete_profile(user)
         self.client.force_login(user)
         reference_month = current_month_date()
 
-        MonthlyIncome.objects.create(
-            user=user,
-            reference_month=reference_month,
-            amount='1000.00',
-            income_type='fixed',
-        )
-        response = self.client.post(
-            reverse('gastos:monthly'),
-            {
-                'reference_month': reference_month.strftime('%Y-%m'),
-                'income_amount': '500.00',
-                'income_type': 'variable',
-            },
-        )
+        for amount, income_type in [('1000.00', 'fixed'), ('500.00', 'variable')]:
+            response = self.client.post(
+                reverse('gastos:monthly'),
+                {
+                    'reference_month': reference_month.strftime('%Y-%m'),
+                    'income_amount': amount,
+                    'income_type': income_type,
+                },
+            )
 
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(MonthlyIncome.objects.filter(user=user, reference_month=reference_month).count(), 2)
+        self.assertEqual(
+            FinancialTransaction.objects.filter(
+                business__owner=user,
+                direction=FinancialTransaction.Direction.INFLOW,
+                date=reference_month,
+            ).count(),
+            2,
+        )
 
-    def test_cadastro_de_renda_soma_valor_se_banco_ainda_tiver_restricao_unica(self):
+    def test_cadastro_de_renda_nao_altera_registro_legado(self):
         user = User.objects.create_user(username='ana@example.com', email='ana@example.com', password='senha12345')
+        complete_profile(user)
         self.client.force_login(user)
         reference_month = current_month_date()
         income = MonthlyIncome.objects.create(
@@ -405,17 +704,21 @@ class GroqIntegrationTests(TestCase):
             income_type='fixed',
         )
 
-        with patch('gastos.views.MonthlyIncome.objects.create', side_effect=IntegrityError('unique constraint')):
-            response = self.client.post(
-                reverse('gastos:monthly'),
-                {
-                    'reference_month': reference_month.strftime('%Y-%m'),
-                    'income_amount': '500.00',
-                    'income_type': 'variable',
-                },
-            )
+        response = self.client.post(
+            reverse('gastos:monthly'),
+            {
+                'reference_month': reference_month.strftime('%Y-%m'),
+                'income_amount': '500.00',
+                'income_type': 'variable',
+            },
+        )
 
         income.refresh_from_db()
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(str(income.amount), '1500.00')
+        self.assertEqual(str(income.amount), '1000.00')
         self.assertEqual(MonthlyIncome.objects.filter(user=user, reference_month=reference_month).count(), 1)
+        transaction = FinancialTransaction.objects.get(
+            business__owner=user,
+            direction=FinancialTransaction.Direction.INFLOW,
+        )
+        self.assertEqual(transaction.amount, Decimal('500.00'))

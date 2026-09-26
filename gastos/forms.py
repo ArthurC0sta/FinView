@@ -1,10 +1,163 @@
 from decimal import Decimal
 
 from django import forms
-from django.contrib.auth.forms import PasswordResetForm, SetPasswordForm
+from django.contrib.auth import authenticate
+from django.contrib.auth.forms import PasswordResetForm, SetPasswordForm, UserCreationForm
+from django.contrib.auth.models import User
 from django.utils import timezone
 
-from .models import FinancialGoal
+from .models import Business, FinancialGoal, ImportRow, ManagerialCategory
+
+
+class LoginForm(forms.Form):
+    email = forms.EmailField(
+        label='E-mail',
+        widget=forms.EmailInput(attrs={'class': 'input', 'autocomplete': 'email', 'autofocus': True}),
+    )
+    password = forms.CharField(
+        label='Senha',
+        strip=False,
+        widget=forms.PasswordInput(attrs={'class': 'input', 'autocomplete': 'current-password'}),
+    )
+
+    def __init__(self, request=None, *args, **kwargs):
+        self.request = request
+        self.user_cache = None
+        super().__init__(*args, **kwargs)
+
+    def clean(self):
+        cleaned = super().clean()
+        email = (cleaned.get('email') or '').strip().lower()
+        password = cleaned.get('password')
+        if email and password:
+            self.user_cache = authenticate(self.request, username=email, password=password)
+            if self.user_cache is None:
+                raise forms.ValidationError('E-mail ou senha inválidos.')
+        return cleaned
+
+    def get_user(self):
+        return self.user_cache
+
+
+class SignupForm(UserCreationForm):
+    name = forms.CharField(label='Nome completo', max_length=150)
+    email = forms.EmailField(label='E-mail')
+
+    class Meta:
+        model = User
+        fields = ('name', 'email', 'password1', 'password2')
+
+    def clean_email(self):
+        email = self.cleaned_data['email'].strip().lower()
+        if User.objects.filter(email__iexact=email).exists() or User.objects.filter(username__iexact=email).exists():
+            raise forms.ValidationError('Já existe uma conta com esse e-mail.')
+        return email
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        name = self.cleaned_data['name'].strip()
+        first_name, _, last_name = name.partition(' ')
+        user.username = self.cleaned_data['email']
+        user.email = self.cleaned_data['email']
+        user.first_name = first_name
+        user.last_name = last_name
+        if commit:
+            user.save()
+        return user
+
+
+class BusinessOnboardingForm(forms.ModelForm):
+    class Meta:
+        model = Business
+        fields = (
+            'name', 'segment', 'activity', 'city', 'state', 'legal_form',
+            'offering_type', 'tax_regime', 'employees_count', 'business_goal',
+        )
+        labels = {
+            'name': 'Nome da empresa', 'segment': 'Segmento', 'activity': 'Atividade principal',
+            'city': 'Município', 'state': 'UF', 'legal_form': 'Enquadramento informado',
+            'offering_type': 'Forma de atuação', 'tax_regime': 'Regime tributário (se conhecido)',
+            'employees_count': 'Quantidade de empregados', 'business_goal': 'Objetivo empresarial',
+        }
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'input'}),
+            'segment': forms.TextInput(attrs={'class': 'input'}),
+            'activity': forms.TextInput(attrs={'class': 'input'}),
+            'city': forms.TextInput(attrs={'class': 'input'}),
+            'state': forms.TextInput(attrs={'class': 'input', 'maxlength': 2}),
+            'legal_form': forms.Select(attrs={'class': 'select'}),
+            'offering_type': forms.Select(attrs={'class': 'select'}),
+            'tax_regime': forms.TextInput(attrs={'class': 'input'}),
+            'employees_count': forms.NumberInput(attrs={'class': 'input', 'min': 0}),
+            'business_goal': forms.TextInput(attrs={'class': 'input'}),
+        }
+
+    def clean_state(self):
+        return self.cleaned_data.get('state', '').strip().upper()
+
+
+PROFILE_CHOICES = [
+    ('0', 'Inicial'),
+    ('1', 'Intermediário'),
+    ('2', 'Estruturado'),
+    ('unknown', 'Não sei informar'),
+]
+
+
+class MaturityProfileForm(forms.Form):
+    records = forms.ChoiceField(label='Como o negócio registra entradas e saídas?', choices=PROFILE_CHOICES)
+    update_frequency = forms.ChoiceField(label='Com que frequência os dados são atualizados?', choices=PROFILE_CHOICES)
+    monthly_volume = forms.ChoiceField(label='Qual é o volume mensal de movimentações?', choices=PROFILE_CHOICES)
+    future_commitments = forms.ChoiceField(label='Como são controladas contas a pagar e receber?', choices=PROFILE_CHOICES)
+    people_involved = forms.ChoiceField(label='Quem participa da gestão financeira?', choices=PROFILE_CHOICES)
+    predictability = forms.ChoiceField(label='Quanto o negócio consegue prever suas receitas?', choices=PROFILE_CHOICES)
+    management_need = forms.ChoiceField(label='Qual é a principal necessidade atual?', choices=PROFILE_CHOICES)
+    advanced_controls = forms.ChoiceField(label='Quais controles avançados são necessários?', choices=PROFILE_CHOICES)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields.values():
+            field.widget.attrs['class'] = 'select'
+
+
+class ProfilePreferencesForm(forms.Form):
+    language = forms.ChoiceField(choices=[('simple', 'Simples'), ('balanced', 'Equilibrada'), ('technical', 'Técnica')], required=False)
+    detail = forms.ChoiceField(choices=[('summary', 'Resumo'), ('balanced', 'Equilibrado'), ('detailed', 'Detalhado')], required=False)
+    focus = forms.ChoiceField(choices=[('cash', 'Proteção do caixa'), ('balance', 'Equilíbrio'), ('growth', 'Crescimento')], required=False)
+    frequency = forms.ChoiceField(choices=[('weekly', 'Semanal'), ('biweekly', 'Quinzenal'), ('monthly', 'Mensal')], required=False)
+    alerts = forms.ChoiceField(choices=[('immediate', 'Imediatos'), ('digest', 'Resumo periódico')], required=False)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields.values():
+            field.widget.attrs['class'] = 'select'
+
+
+class ImportUploadForm(forms.Form):
+    file = forms.FileField(
+        label='Arquivo financeiro',
+        widget=forms.ClearableFileInput(attrs={'class': 'input', 'accept': '.ofx,.ofc,.csv,.xls,.pdf,.cnab,.ret'}),
+    )
+    sheet_name = forms.CharField(label='Aba do XLS', required=False, widget=forms.TextInput(attrs={'class': 'input', 'placeholder': 'Primeira aba'}))
+    date_column = forms.CharField(label='Coluna de data', initial='data', required=False, widget=forms.TextInput(attrs={'class': 'input'}))
+    description_column = forms.CharField(label='Coluna de descrição', initial='descricao', required=False, widget=forms.TextInput(attrs={'class': 'input'}))
+    amount_column = forms.CharField(label='Coluna de valor', initial='valor', required=False, widget=forms.TextInput(attrs={'class': 'input'}))
+    direction_column = forms.CharField(label='Coluna de natureza', initial='natureza', required=False, widget=forms.TextInput(attrs={'class': 'input'}))
+
+
+class ImportRowReviewForm(forms.ModelForm):
+    class Meta:
+        model = ImportRow
+        fields = ('decision', 'confirmed_category')
+        widgets = {'decision': forms.Select(attrs={'class': 'select'}), 'confirmed_category': forms.Select(attrs={'class': 'select'})}
+
+    def __init__(self, *args, business=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['confirmed_category'].queryset = ManagerialCategory.objects.filter(
+            business=business,
+            is_active=True,
+        ) if business else ManagerialCategory.objects.none()
+        self.fields['confirmed_category'].required = False
 
 
 class FinViewPasswordResetForm(PasswordResetForm):

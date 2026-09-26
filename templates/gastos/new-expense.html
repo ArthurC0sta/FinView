@@ -1,71 +1,18 @@
-{% load static %}
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Nova Despesa — FinView AI</title>
-<meta name="description" content="Cadastre uma nova despesa." />
-<link rel="stylesheet" href="{% static 'assets/css/styles.css' %}" />
-</head>
-<body>
-<div class="bg-anim"><div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div></div><div class="bg-grid"></div>
-
-<div class="app">
-  
-<aside class="sidebar">
-  <div class="brand"><a href="{% url 'gastos:landing' %}" class="logo"><span class="dot">F</span><span>FinView <span class="text-gradient">AI</span></span></a></div>
-  <a href="{% url 'gastos:dashboard' %}?month={{ current_month_input }}" class="nav-item "><span>📊</span>Dashboard</a>
-<a href="{% url 'gastos:monthly' %}?month={{ current_month_input }}" class="nav-item "><span>📅</span>Mensal</a>
-<a href="{% url 'gastos:goals' %}" class="nav-item "><span>🎯</span>Metas</a>
-<a href="{% url 'gastos:new_expense' %}?month={{ current_month_input }}" class="nav-item active"><span>🧾</span>Nova despesa</a>
-<a href="{% url 'gastos:profile' %}" class="nav-item "><span>👤</span>Perfil</a>
-  <div style="margin-top:auto;padding-top:1rem;border-top:1px solid hsl(0 0% 100% / .06)">
-    <a href="{% url 'gastos:logout' %}" class="nav-item">↩ Sair</a>
-  </div>
-</aside>
-
-  <main class="main">
-<div style="max-width:760px;margin:0 auto">
-  <div class="mb-6">
-    <h1 class="font-display text-3xl font-bold">{% if edit_mode %}Editar Despesa{% else %}Nova Despesa{% endif %}</h1>
-    <p class="muted mt-2">{% if edit_mode %}Atualize os dados desse gasto.{% else %}Cadastre um gasto para esse mês.{% endif %}</p>
-  </div>
-  <div class="glass-strong">
-    <form action="{% if form_action %}{{ form_action }}{% else %}{% url 'gastos:new_expense' %}{% endif %}" method="post">
-      {% csrf_token %}
-      <label class="label">Nome da despesa</label>
-      <input class="input" name="name" placeholder="Ex: Aluguel" autocomplete="off" value="{{ expense.name|default:'' }}" autofocus required />
-      <div class="grid g2 mt-4">
-        <div><label class="label">Valor (R$)</label><input class="input money-input" name="amount" type="text" inputmode="decimal" autocomplete="off" placeholder="0,00" value="{{ expense.amount|default:'' }}" required /></div>
-        <div><label class="label">Data</label><input class="input" name="date" type="date" value="{{ current_date_input }}" /></div>
-      </div>
-      <div class="grid g2 mt-4">
-        <div><label class="label">Categoria</label><select class="select" name="category"><option {% if expense.category == 'Moradia' %}selected{% endif %}>Moradia</option><option {% if expense.category == 'Alimentação' %}selected{% endif %}>Alimentação</option><option {% if expense.category == 'Transporte' %}selected{% endif %}>Transporte</option><option {% if expense.category == 'Lazer' %}selected{% endif %}>Lazer</option><option {% if expense.category == 'Saúde' %}selected{% endif %}>Saúde</option><option {% if expense.category == 'Educação' %}selected{% endif %}>Educação</option><option {% if expense.category == 'Assinaturas' %}selected{% endif %}>Assinaturas</option><option {% if expense.category == 'Outros' %}selected{% endif %}>Outros</option></select></div>
-        <div><label class="label">Recorrência</label><select class="select" name="recurrence"><option value="fixed" {% if expense.recurrence == 'fixed' %}selected{% endif %}>Fixa</option><option value="variable" {% if expense.recurrence == 'variable' or not expense %}selected{% endif %}>Variável</option></select></div>
-      </div>
-      <label class="label mt-4">Prioridade</label>
-      <input id="priority-input" name="priority" type="hidden" value="{{ expense.priority|default:'essential' }}" />
-      <div class="grid g3" style="gap:.5rem">
-        <button type="button" class="prio" data-v="essential" style="padding:.7rem;border-radius:.7rem;border:1px solid hsl(0 0% 100% / .10);background:hsl(0 0% 100% / .04)">Essencial</button>
-        <button type="button" class="prio" data-v="important" style="padding:.7rem;border-radius:.7rem;border:1px solid hsl(0 0% 100% / .10);background:hsl(0 0% 100% / .04)">Importante</button>
-        <button type="button" class="prio" data-v="superfluous" style="padding:.7rem;border-radius:.7rem;border:1px solid hsl(0 0% 100% / .10);background:hsl(0 0% 100% / .04)">Dispensável</button>
-      </div>
-      <label class="label mt-4">Notas (opcional)</label>
-      <textarea class="textarea" name="notes" rows="3" placeholder="Detalhes adicionais...">{{ expense.notes|default:'' }}</textarea>
-      <div class="flex gap-3 mt-6"><a href="{% url 'gastos:monthly' %}?month={{ current_month_input }}" class="btn btn-outline" style="flex:1">Cancelar</a><button type="submit" class="btn btn-primary" style="flex:2">{% if edit_mode %}Salvar alterações{% else %}Salvar despesa{% endif %}</button></div>
-    </form>
-  </div>
+{% extends 'gastos/app.html' %}
+{% block title %}{% if edit_mode %}Editar despesa{% else %}Nova despesa{% endif %} | FinView{% endblock %}
+{% block description %}Registre uma saída empresarial realizada.{% endblock %}
+{% block app_content %}
+<div class="product-page expense-form-page">
+  <a class="back-link" href="{% url 'gastos:monthly' %}?month={{ current_month_input }}"><i class="ph ph-arrow-left"></i> Voltar para movimentações</a>
+  <header class="product-header form-header"><div><p class="business-context">{{ current_business.name }} <span>/</span> Fluxo realizado</p><h1>{% if edit_mode %}Editar despesa{% else %}Nova despesa{% endif %}</h1><p>Registre uma saída com informações suficientes para a leitura gerencial.</p></div><a class="product-btn secondary" href="{% url 'gastos:imports' %}"><i class="ph ph-upload-simple"></i> Importar dados</a></header>
+  {% if messages %}<div class="message-stack">{% for message in messages %}<div class="inline-message" role="alert"><i class="ph ph-warning"></i><p>{{ message }}</p></div>{% endfor %}</div>{% endif %}
+  <form class="expense-form-layout product-form" action="{% if edit_mode %}{{ form_action }}{% else %}{% url 'gastos:new_expense' %}{% endif %}" method="post">
+    {% csrf_token %}
+    <section class="form-surface" aria-labelledby="basic-title"><div class="form-section-title"><span>1</span><div><h2 id="basic-title">Dados da despesa</h2><p>Identifique o lançamento e sua data de realização.</p></div></div><div class="field-grid two"><label><span>Nome da despesa</span><input name="name" value="{{ expense.name|default:'' }}" autocomplete="off" placeholder="Ex.: Aluguel do escritório" required><small>Use uma descrição reconhecível.</small></label><label><span>Valor realizado</span><div class="money-field"><b>R$</b><input class="money-input" name="amount" value="{{ expense.amount|default:'' }}" inputmode="decimal" autocomplete="off" placeholder="0,00" required></div></label></div><div class="field-grid"><label><span>Data</span><input name="date" type="date" value="{{ current_date_input }}" required></label></div></section>
+    <section class="form-surface" aria-labelledby="classification-title"><div class="form-section-title"><span>2</span><div><h2 id="classification-title">Classificação gerencial</h2><p>A categoria organiza os totais e insights do dashboard.</p></div></div><div class="field-grid two"><label><span>Categoria</span><select name="category" required><option {% if expense.category.name == 'Moradia' %}selected{% endif %}>Moradia</option><option {% if expense.category.name == 'Alimentação' %}selected{% endif %}>Alimentação</option><option {% if expense.category.name == 'Transporte' %}selected{% endif %}>Transporte</option><option {% if expense.category.name == 'Saúde' %}selected{% endif %}>Saúde</option><option {% if expense.category.name == 'Educação' %}selected{% endif %}>Educação</option><option {% if expense.category.name == 'Assinaturas' %}selected{% endif %}>Assinaturas</option><option {% if expense.category.name == 'Outros' or not expense %}selected{% endif %}>Outros</option></select></label><fieldset><legend>Recorrência</legend><div class="segmented"><label><input type="radio" name="recurrence" value="fixed" {% if expense.recurrence == 'fixed' %}checked{% endif %}><span>Fixa</span></label><label><input type="radio" name="recurrence" value="variable" {% if expense.recurrence == 'variable' or not expense %}checked{% endif %}><span>Variável</span></label></div></fieldset></div><fieldset><legend>Prioridade</legend><div class="priority-options"><label><input type="radio" name="priority" value="essential" {% if expense.priority == 'essential' or not expense %}checked{% endif %}><span><b>Essencial</b><small>Mantém a operação.</small></span></label><label><input type="radio" name="priority" value="important" {% if expense.priority == 'important' %}checked{% endif %}><span><b>Importante</b><small>Permite revisão.</small></span></label><label><input type="radio" name="priority" value="superfluous" {% if expense.priority == 'superfluous' %}checked{% endif %}><span><b>Dispensável</b><small>Pode ser reduzida.</small></span></label></div></fieldset><label class="full-field"><span>Observações <em>Opcional</em></span><textarea name="notes" rows="4" placeholder="Contrato, fornecedor ou outro contexto útil">{{ expense.notes|default:'' }}</textarea></label></section>
+    <aside class="form-review"><p class="section-kicker">Antes de salvar</p><h2>Revise o lançamento</h2><ul><li><i class="ph ph-check"></i> O valor representa uma saída realizada.</li><li><i class="ph ph-check"></i> A categoria descreve a finalidade do gasto.</li><li><i class="ph ph-check"></i> A recorrência corresponde ao comportamento esperado.</li></ul><p><i class="ph ph-info"></i> A classificação é gerencial e não constitui tratamento contábil ou fiscal.</p></aside>
+    <div class="form-actions"><a class="product-btn secondary" href="{% url 'gastos:monthly' %}?month={{ current_month_input }}">Cancelar</a><button class="product-btn primary" type="submit"><i class="ph ph-check"></i> {% if edit_mode %}Salvar alterações{% else %}Salvar despesa{% endif %}</button></div>
+  </form>
+  <aside class="import-note"><i class="ph ph-file-arrow-up"></i><div><strong>Importação disponível</strong><p>OFX/OFC, CSV/XLS, PDF textual e CNAB 240/400.</p></div><a class="text-action" href="{% url 'gastos:imports' %}">Abrir central</a></aside>
 </div>
-<script>
-  const ps=document.querySelectorAll('.prio');const priorityInput=document.querySelector('#priority-input');let ap=document.querySelector(`.prio[data-v="${priorityInput ? priorityInput.value : 'essential'}"]`) || ps[0];if(ap){ap.style.borderColor='hsl(var(--primary))';ap.style.background='hsl(var(--primary) / .12)'}
-  ps.forEach(p=>p.addEventListener('click',()=>{if(ap){ap.style.borderColor='hsl(0 0% 100% / .10)';ap.style.background='hsl(0 0% 100% / .04)'}ap=p;p.style.borderColor='hsl(var(--primary))';p.style.background='hsl(var(--primary) / .12)';if(priorityInput){priorityInput.value=p.dataset.v}}));
-</script>
-</main>
-</div>
-<nav class="mobile-nav"><a href="{% url 'gastos:dashboard' %}?month={{ current_month_input }}" class=""><span style="font-size:1.1rem">📊</span>Dashboard</a><a href="{% url 'gastos:monthly' %}?month={{ current_month_input }}" class=""><span style="font-size:1.1rem">📅</span>Mensal</a><a href="{% url 'gastos:goals' %}" class=""><span style="font-size:1.1rem">🎯</span>Metas</a><a href="{% url 'gastos:new_expense' %}?month={{ current_month_input }}" class="active"><span style="font-size:1.1rem">🧾</span>Gasto</a><a href="{% url 'gastos:profile' %}" class=""><span style="font-size:1.1rem">👤</span>Perfil</a></nav>
-
-{% include 'gastos/partials/ai_panel.html' %}
-
-<script src="{% static 'assets/js/app.js' %}?v=20260501-money-mask"></script>
-</body></html>
+{% endblock %}

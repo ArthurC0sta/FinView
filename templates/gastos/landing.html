@@ -1,114 +1,16 @@
+{% extends 'gastos/base.html' %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>FinView AI — Decisões financeiras inteligentes</title>
-<meta name="description" content="Plataforma fintech com dashboard, Power BI e IA para organizar suas finanças pessoais." />
-<link rel="stylesheet" href="{% static 'assets/css/styles.css' %}" />
-</head>
-<body>
-<div class="bg-anim"><div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div></div><div class="bg-grid"></div>
-
-<header class="navbar">
-  <div class="container row">
-    <a href="{% url 'gastos:landing' %}" class="logo"><span class="dot">F</span><span>FinView <span class="text-gradient">AI</span></span></a>
-    <nav>
-      <a href="#features">Recursos</a>
-      <a href="#how">Como funciona</a>
-      <a href="#benefits">Benefícios</a>
-    </nav>
-    <div class="flex gap-2">
-      <a href="{% url 'gastos:login' %}" class="btn btn-ghost">Entrar</a>
-      <a href="{% url 'gastos:signup' %}" class="btn btn-primary">Começar</a>
-    </div>
-  </div>
-</header>
-
-<section style="padding:9rem 0 5rem">
-  <div class="container">
-    <div style="max-width:780px;margin:0 auto;text-align:center">
-      <span class="chip">✨ Powered by FinView Intelligence</span>
-      <h1 class="font-display text-7xl font-bold leading-tight mt-4">
-        Transforme seus gastos em <span class="text-gradient">decisões inteligentes</span>
-      </h1>
-      <p class="muted mt-6 text-lg">FinView AI combina dashboard financeiro e inteligência artificial para você entender, controlar e otimizar seu dinheiro como nunca antes.</p>
-      <div class="flex gap-3 mt-8" style="justify-content:center;flex-wrap:wrap">
-        <a href="{% url 'gastos:signup' %}" class="btn btn-primary btn-lg">Começar agora →</a>
-      </div>
-      <div class="grid g3 mt-10" style="max-width:620px;margin-left:auto;margin-right:auto">
-        <div class="glass text-center"><p class="font-display text-2xl font-bold text-gradient">+R$ 230</p><p class="text-xs muted mt-2">economia média/mês</p></div>
-        <div class="glass text-center"><p class="font-display text-2xl font-bold text-gradient">94%</p><p class="text-xs muted mt-2">satisfação com IA</p></div>
-        <div class="glass text-center"><p class="font-display text-2xl font-bold text-gradient">3 min</p><p class="text-xs muted mt-2">para configurar</p></div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section id="features" style="padding:5rem 0">
-  <div class="container">
-    <div style="text-align:center;max-width:600px;margin:0 auto 3rem">
-      <p class="uppercase-tag">Recursos</p>
-      <h2 class="font-display text-5xl font-bold mt-3">Tudo que você precisa em um só lugar</h2>
-    </div>
-    <div class="grid g4"><div class="glass hover-lift"><div class="kpi-icon mb-4">💼</div><h3 class="font-display font-semibold text-lg">Organização de gastos</h3><p class="text-sm muted mt-2">Categorize despesas por tipo, recorrência e prioridade em segundos.</p></div>
-<div class="glass hover-lift"><div class="kpi-icon mb-4">📊</div><h3 class="font-display font-semibold text-lg">Dashboards inteligentes</h3><p class="text-sm muted mt-2">Visualize seu mês como uma fintech profissional, com gráficos vivos.</p></div>
-<div class="glass hover-lift"><div class="kpi-icon mb-4">🧠</div><h3 class="font-display font-semibold text-lg">Recomendações com IA</h3><p class="text-sm muted mt-2">Insights personalizados que se adaptam ao seu objetivo financeiro.</p></div>
-<div class="glass hover-lift"><div class="kpi-icon mb-4">📅</div><h3 class="font-display font-semibold text-lg">Controle mensal</h3><p class="text-sm muted mt-2">Acompanhe sua evolução mês a mês e nunca mais perca o controle.</p></div></div>
-  </div>
-</section>
-
-<section id="how" style="padding:5rem 0">
-  <div class="container">
-    <div style="text-align:center;max-width:600px;margin:0 auto 3rem">
-      <p class="uppercase-tag">Como funciona</p>
-      <h2 class="font-display text-5xl font-bold mt-3">Em apenas 3 passos</h2>
-    </div>
-    <div class="grid g3"><div class="glass-strong"><div class="font-display text-7xl font-bold text-gradient-cool" style="opacity:.4">01</div><h3 class="font-display font-semibold text-lg mt-4">Informe sua renda e despesas</h3><p class="text-sm muted mt-2">Cadastre os ganhos do mês e adicione gastos fixos ou variáveis.</p></div>
-<div class="glass-strong"><div class="font-display text-7xl font-bold text-gradient-cool" style="opacity:.4">02</div><h3 class="font-display font-semibold text-lg mt-4">Visualize tudo no dashboard</h3><p class="text-sm muted mt-2">Power BI embutido com gráficos de categorias, prioridades e evolução.</p></div>
-<div class="glass-strong"><div class="font-display text-7xl font-bold text-gradient-cool" style="opacity:.4">03</div><h3 class="font-display font-semibold text-lg mt-4">Receba insights da IA</h3><p class="text-sm muted mt-2">Análise automática com sugestões para alcançar seu objetivo.</p></div></div>
-  </div>
-</section>
-
-<section id="benefits" style="padding:5rem 0">
-  <div class="container">
-    <div class="grid g2" style="align-items:center;gap:2.5rem">
-      <div>
-        <p class="uppercase-tag">Benefícios</p>
-        <h2 class="font-display text-5xl font-bold mt-3">Uma plataforma feita para <span class="text-gradient">quem decide</span></h2>
-        <p class="muted mt-4">Não é mais uma planilha. É um copiloto financeiro que aprende com seus hábitos e te leva mais perto do seu objetivo todo mês.</p>
-        <ul style="margin-top:1.5rem;list-style:none"><li class="flex items-center gap-3 text-sm" style="margin-bottom:.7rem"><span style="color:hsl(var(--accent))">✓</span>Renda flexível mês a mês — sem amarras</li>
-<li class="flex items-center gap-3 text-sm" style="margin-bottom:.7rem"><span style="color:hsl(var(--accent))">✓</span>Análise IA conectada ao seu objetivo pessoal</li>
-<li class="flex items-center gap-3 text-sm" style="margin-bottom:.7rem"><span style="color:hsl(var(--accent))">✓</span>Score financeiro em tempo real</li>
-<li class="flex items-center gap-3 text-sm" style="margin-bottom:.7rem"><span style="color:hsl(var(--accent))">✓</span>Alertas inteligentes de gastos excessivos</li>
-<li class="flex items-center gap-3 text-sm" style="margin-bottom:.7rem"><span style="color:hsl(var(--accent))">✓</span>Glassmorphism premium e experiência imersiva</li>
-<li class="flex items-center gap-3 text-sm" style="margin-bottom:.7rem"><span style="color:hsl(var(--accent))">✓</span>100% responsivo, do desktop ao celular</li></ul>
-      </div>
-      <div class="grid g2">
-        <div class="glass-strong text-center"><div style="font-size:2rem">📈</div><p class="font-display text-lg font-bold mt-3">Score 78</p><p class="text-xs muted mt-2">+5 vs mês anterior</p></div>
-        <div class="glass-strong text-center"><div style="font-size:2rem">🥧</div><p class="font-display text-lg font-bold mt-3">8 categorias</p><p class="text-xs muted mt-2">monitoradas</p></div>
-        <div class="glass-strong text-center"><div style="font-size:2rem">🛡️</div><p class="font-display text-lg font-bold mt-3">Privacidade</p><p class="text-xs muted mt-2">dados criptografados</p></div>
-        <div class="glass-strong text-center"><div style="font-size:2rem">⚡</div><p class="font-display text-lg font-bold mt-3">Insights IA</p><p class="text-xs muted mt-2">em tempo real</p></div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section style="padding:5rem 0">
-  <div class="container">
-    <div class="glass-strong text-center" style="padding:3rem 1.5rem;position:relative;overflow:hidden">
-      <h2 class="font-display text-5xl font-bold">Comece a controlar seu dinheiro <br/><span class="text-gradient">com inteligência</span></h2>
-      <p class="muted mt-4" style="max-width:520px;margin-left:auto;margin-right:auto">Crie sua conta em menos de um minuto e veja seus gastos como uma fintech vê os seus.</p>
-      <a href="{% url 'gastos:signup' %}" class="btn btn-primary btn-lg mt-6">Criar conta gratuita →</a>
-    </div>
-  </div>
-</section>
-
-<footer>
-  <div class="container row">
-    <p>© 2025 FinView AI. Todos os direitos reservados.</p>
-    <div class="flex gap-4"><a href="#">Privacidade</a><a href="#">Termos</a><a href="#">Contato</a></div>
-  </div>
-</footer>
-</body></html>
+{% block title %}FinView | Clareza para decidir{% endblock %}
+{% block description %}Organize as finanças do negócio, antecipe riscos e transforme dados em ações.{% endblock %}
+{% block body_class %}landing-body{% endblock %}
+{% block body %}
+<a class="skip-link" href="#main-content">Ir para o conteúdo</a>
+<header class="landing-header"><nav class="landing-nav" aria-label="Principal"><a class="landing-brand" href="{% url 'gastos:landing' %}"><b>F</b><span>FinView</span></a><div class="landing-links"><a href="#beneficios">Benefícios</a><a href="#metodo">Método</a><a href="#limites">Limites</a></div><div class="landing-actions"><a href="{% url 'gastos:login' %}" class="product-btn secondary">Entrar</a><a href="{% url 'gastos:signup' %}" class="product-btn primary">Começar</a></div></nav></header>
+<main id="main-content">
+  <section class="landing-hero"><div class="landing-message"><p class="landing-eyebrow">Gestão financeira para pequenos negócios</p><h1>Organize as finanças, antecipe riscos e transforme dados em ações.</h1><p>Uma visão clara do caixa para decidir com mais contexto e menos improviso.</p><div class="landing-hero-actions"><a href="{% url 'gastos:signup' %}" class="product-btn primary">Explorar o FinView</a><a href="#metodo" class="product-btn secondary">Conhecer o método</a></div></div><figure class="landing-product"><div><img src="{% static 'assets/img/finview-dashboard.png' %}" width="1440" height="900" alt="Dashboard do FinView com situação do caixa, alertas e metas empresariais"></div><figcaption>Interface real do produto, com dados ilustrativos na captura.</figcaption></figure></section>
+  <section class="landing-benefits" id="beneficios" aria-labelledby="benefits-title"><h2 id="benefits-title">Do registro à próxima decisão.</h2><div><article><i class="ph ph-wallet"></i><h3>Visão do caixa</h3><p>Entradas e saídas realizadas, organizadas por finalidade.</p></article><article><i class="ph ph-calendar-check"></i><h3>Mais previsibilidade</h3><p>Períodos e compromissos tratados em leituras distintas.</p></article><article><i class="ph ph-list-checks"></i><h3>Ações claras</h3><p>Metas e prioridades conectadas aos dados disponíveis.</p></article></div></section>
+  <section class="landing-method" id="metodo" aria-labelledby="method-title"><div><h2 id="method-title">Um método que mostra o caminho dos dados.</h2><p>O FinView verifica os registros antes de produzir uma leitura.</p></div><ol><li><span>01</span><strong>Organizar</strong><p>Reunir entradas, custos e despesas.</p></li><li><span>02</span><strong>Validar</strong><p>Identificar ausências e classificações pendentes.</p></li><li><span>03</span><strong>Calcular</strong><p>Aplicar regras às bases disponíveis.</p></li><li><span>04</span><strong>Interpretar</strong><p>Explicar evidências e incertezas.</p></li><li><span>05</span><strong>Agir</strong><p>Transformar a leitura em próximos passos.</p></li></ol></section>
+  <section class="landing-limits" id="limites" aria-labelledby="limits-title"><div><i class="ph ph-shield-check"></i><h2 id="limits-title">Clareza também significa mostrar os limites.</h2></div><p>Projeções dependem de dados suficientes. As análises são gerenciais e consultivas, não constituem escrituração contábil.</p><a href="{% url 'gastos:signup' %}">Criar minha conta <i class="ph ph-arrow-right"></i></a></section>
+</main>
+<footer class="landing-footer"><p>FinView</p><p>Análises consultivas não substituem contador habilitado.</p></footer>
+{% endblock %}

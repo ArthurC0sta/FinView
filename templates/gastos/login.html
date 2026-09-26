@@ -1,43 +1,11 @@
-{% load static %}
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Entrar — FinView AI</title>
-<meta name="description" content="Acesse sua conta FinView AI." />
-<link rel="stylesheet" href="{% static 'assets/css/styles.css' %}" />
-</head>
-<body>
-<div class="bg-anim subtle"><div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div></div><div class="bg-grid"></div>
-
-<main style="min-height:100vh;display:grid;place-items:center;padding:2rem 1rem">
-  <div style="width:100%;max-width:420px">
-    <div class="text-center mb-6"><a href="{% url 'gastos:landing' %}" class="logo"><span class="dot">F</span><span>FinView <span class="text-gradient">AI</span></span></a></div>
-    <div class="glass-strong" style="padding:2rem">
-      <h1 class="font-display text-2xl font-bold text-center">Bem-vindo de volta</h1>
-      <p class="text-sm muted text-center mt-2">Entre na sua conta para continuar</p>
-      {% if messages %}
-        <div class="form-alert mt-4" role="alert" aria-live="polite">
-          <span class="form-alert-icon">!</span>
-          <div>
-            {% for message in messages %}
-              <p>{{ message }}</p>
-            {% endfor %}
-          </div>
-        </div>
-      {% endif %}
-      <form action="{% url 'gastos:login' %}" method="post" style="margin-top:2rem">
-        {% csrf_token %}
-        <label class="label">E-mail</label>
-        <input class="input" name="email" type="email" placeholder="voce@email.com" autocomplete="email" autocapitalize="none" spellcheck="false" autofocus required />
-        <div class="flex justify-between mt-4"><label class="label">Senha</label><a href="{% url 'gastos:password_reset' %}" class="text-xs" style="color:hsl(var(--primary))">Esqueci a senha</a></div>
-        <input class="input" name="password" type="password" placeholder="••••••••" autocomplete="current-password" required />
-        <button type="submit" class="btn btn-primary mt-6" style="width:100%">Entrar →</button>
-      </form>
-      <p class="text-sm muted text-center mt-6">Ainda não tem conta? <a href="{% url 'gastos:signup' %}" style="color:hsl(var(--primary));font-weight:500">Criar agora</a></p>
-    </div>
-  </div>
-</main>
-<script src="{% static 'assets/js/app.js' %}?v=20260501-money-mask"></script>
-</body></html>
+{% extends 'gastos/auth.html' %}
+{% block title %}Entrar | FinView{% endblock %}
+{% block auth_content %}
+<p class="section-kicker">Acesso seguro</p><h2>Bem-vindo de volta</h2><p class="auth-intro">Entre para acessar o Command Center da sua empresa.</p>
+<form method="post" action="{% url 'gastos:login' %}" class="product-form auth-form" novalidate>{% csrf_token %}<input type="hidden" name="next" value="{{ next }}">
+  {% if form.non_field_errors %}<div class="inline-message" role="alert"><i class="ph ph-warning-circle"></i><div>{{ form.non_field_errors }}</div></div>{% endif %}
+  <label><span>{{ form.email.label }}</span>{{ form.email }}{% for error in form.email.errors %}<small class="field-error">{{ error }}</small>{% endfor %}</label>
+  <label><span class="label-line">{{ form.password.label }} <a href="{% url 'gastos:password_reset' %}">Esqueci a senha</a></span>{{ form.password }}{% for error in form.password.errors %}<small class="field-error">{{ error }}</small>{% endfor %}</label>
+  <button class="product-btn primary auth-submit" type="submit">Entrar <i class="ph ph-arrow-right"></i></button>
+</form><p class="auth-switch">Ainda não possui conta? <a href="{% url 'gastos:signup' %}">Criar conta</a></p>
+{% endblock %}

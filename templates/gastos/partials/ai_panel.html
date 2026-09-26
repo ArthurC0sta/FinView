@@ -1,33 +1,21 @@
-<button id="aiToggle" class="ai-toggle" aria-label="Abrir IA">✨</button>
+<button id="aiToggle" class="ai-toggle" aria-label="Abrir análise consultiva" aria-controls="aiPanel" aria-expanded="false"><i class="ph ph-sparkle"></i><span>Analisar</span></button>
 
-<aside id="aiPanel" class="ai-panel" data-ai-url="{% url 'gastos:ai_financial_insight' %}" data-month="{{ current_month_input }}" data-csrf="{{ csrf_token }}">
-  <button id="aiClose" class="close-x" aria-label="Fechar">✕</button>
+<aside id="aiPanel" class="ai-panel" aria-hidden="true" data-ai-url="{% url 'gastos:ai_financial_insight' %}" data-month="{{ current_month_input }}" data-csrf="{{ csrf_token }}">
+  <button id="aiClose" class="close-x" aria-label="Fechar análise"><i class="ph ph-x"></i></button>
 
-  <div class="flex items-center gap-3 mb-4">
-    <div class="kpi-icon ai-icon">✨</div>
+  <div class="ai-panel-header">
+    <div class="ai-panel-icon"><i class="ph ph-sparkle"></i></div>
     <div>
-      <h3 class="font-display font-semibold">FinView AI</h3>
-      <p class="text-xs muted">Análises personalizadas</p>
+      <p class="section-kicker">Análise consultiva</p>
+      <h2>Leitura do período</h2>
     </div>
   </div>
 
-  <div class="ai-card alert-t">
-    <p class="text-xs muted">⚠️ Alerta</p>
-    <p class="text-sm mt-2">Seus gastos com lazer estão 38% acima da sua média mensal.</p>
-  </div>
   <div class="ai-card tip">
-    <p class="text-xs muted">💡 Análise gerada por IA</p>
-    <div id="aiInsightText" class="text-sm mt-2">Abrindo a IA para analisar seus lançamentos...</div>
+    <p class="ai-card-label"><i class="ph ph-brain"></i> Explicação gerada por IA</p>
+    <div id="aiInsightText" class="text-sm mt-2" aria-live="polite">Preparando a leitura dos seus lançamentos.</div>
   </div>
-  <div class="ai-card goal">
-    <p class="text-xs muted">🎯 Objetivo</p>
-    <p class="text-sm mt-2">Seu objetivo é {{ current_user.goal|default:'controlar gastos'|lower }}. Os insights serão ajustados conforme seus lançamentos.</p>
-  </div>
-  <div class="ai-card positive">
-    <p class="text-xs muted">✅ Bom sinal</p>
-    <p class="text-sm mt-2">Seus gastos essenciais estão dentro do esperado: 52% da renda.</p>
-  </div>
+  <div class="ai-card goal"><p class="ai-card-label"><i class="ph ph-target"></i> Objetivo informado</p><p class="text-sm mt-2">{{ current_user.goal|default:'Controlar gastos' }}.</p></div>
 
-  <div class="divider"></div>
-  <p class="text-xs muted">Os insights são atualizados conforme você adiciona despesas.</p>
+  <p class="ai-disclaimer"><i class="ph ph-info"></i> Esta análise é gerencial e consultiva. Não substitui contador habilitado.</p>
 </aside>

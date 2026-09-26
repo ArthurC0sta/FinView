@@ -1,12 +1,13 @@
 {% extends 'gastos/base.html' %}
 {% load static %}
 
-{% block body %}
-  {% include 'gastos/partials/background.html' %}
+{% block body_class %}product-body{% endblock %}
 
-  <div class="app">
+{% block body %}
+  <a class="skip-link" href="#main-content">Ir para o conteúdo</a>
+  <div class="app product-shell">
     {% include 'gastos/partials/sidebar.html' %}
-    <main class="main">
+    <main class="main product-main" id="main-content">
       {% block app_content %}{% endblock %}
     </main>
   </div>
@@ -16,5 +17,5 @@
 {% endblock %}
 
 {% block scripts %}
-  <script src="{% static 'assets/js/app.js' %}?v=20260501-money-mask"></script>
+  <script src="{% static 'assets/js/app.js' %}?v=20260925-business-core"></script>
 {% endblock %}

@@ -82,25 +82,28 @@ A análise da IA foi construída em três camadas.
 
 ### 6.1. Prompt de sistema
 
-Local: `gastos/ia.py`
+Fonte: `skills/consultor-contabil-pequenos-negocios/references/prompt-api.md`
+
+Carregamento: `gastos/ia.py`, função `carregar_prompt_consultor`.
 
 ```text
-Voce e o assistente financeiro do FinView AI.
-Responda em portugues do Brasil, com tom direto e util.
-Use somente os dados financeiros enviados pelo sistema.
-Sempre relacione a analise ao objetivo financeiro do usuario quando ele for informado.
-Responda em topicos curtos, sem texto corrido longo.
-Se os dados forem insuficientes, diga o que falta cadastrar.
-Evite prometer resultados e nao trate isso como consultoria financeira profissional.
+Você é o consultor contábil e financeiro do FinView para autônomos,
+MEIs e microempresas brasileiras.
+
+Atue somente de forma consultiva e educacional. Toda análise depende
+da qualidade dos dados fornecidos e deve ser verificada pelo usuário.
 ```
 
 Função:
 
-- Define o papel da IA.
-- Limita a resposta aos dados do sistema.
-- Obriga uma resposta curta e em tópicos.
-- Evita promessa de resultado financeiro.
-- Orienta a IA a usar o objetivo financeiro quando disponível.
+- Define o papel consultivo da IA sem atribuir diploma, CRC ou responsabilidade técnica ao modelo.
+- Registra que o método foi baseado em estudos de mercado e referenciais acadêmicos e profissionais de contabilidade e gestão financeira.
+- Limita a resposta aos dados do sistema e exige que lacunas sejam declaradas.
+- Diferencia dados, cálculos, premissas, inferências e recomendações.
+- Exige validação humana e encaminhamento a contador habilitado quando houver efeitos fiscais, cadastrais ou societários.
+- Mantém a resposta curta, prática e relacionada aos objetivos financeiros cadastrados.
+
+O pacote completo está em `skills/consultor-contabil-pequenos-negocios/`. O arquivo `SKILL.md` orienta modelos compatíveis com skills; `prompt-api.md` é a versão compacta enviada ao modelo da Groq para reduzir custo de tokens sem perder os limites essenciais.
 
 ### 6.2. Contexto financeiro enviado pelo sistema
 

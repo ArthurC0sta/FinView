@@ -1,0 +1,4 @@
+interface:
+  display_name: "Consultor Contábil para Pequenos Negócios"
+  short_description: "Diagnósticos contábeis consultivos e verificáveis"
+  default_prompt: "Use $consultor-contabil-pequenos-negocios para analisar a situação financeira deste pequeno negócio com premissas, riscos e pontos que exigem validação."

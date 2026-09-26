@@ -1,18 +1,13 @@
 {% extends 'gastos/base.html' %}
-
-{% block body_class %}auth-page{% endblock %}
-
+{% block body_class %}product-body auth-product-body{% endblock %}
 {% block body %}
-  {% include 'gastos/partials/background.html' with subtle=True %}
-
-  <main class="auth-shell">
-    <div class="auth-card {% block auth_width %}{% endblock %}">
-      <div class="text-center mb-6">
-        {% include 'gastos/partials/logo.html' %}
-      </div>
-      <section class="glass-strong auth-panel">
-        {% block auth_content %}{% endblock %}
-      </section>
-    </div>
-  </main>
+<a class="skip-link" href="#auth-content">Ir para o conteúdo</a>
+<main class="auth-layout" id="auth-content">
+  <section class="auth-story" aria-label="Apresentação do FinView">
+    <a href="{% url 'gastos:landing' %}" class="auth-brand"><span>F</span>FinView</a>
+    <div><p class="section-kicker">Gestão financeira para pequenos negócios</p><h1>Decisões melhores começam com dados organizados.</h1><p>Centralize movimentações, compreenda o caixa e transforme evidências em ações gerenciais.</p></div>
+    <small>Análises gerenciais não substituem escrituração ou orientação de contador habilitado.</small>
+  </section>
+  <section class="auth-form-column"><div class="auth-card-product">{% block auth_content %}{% endblock %}</div></section>
+</main>
 {% endblock %}

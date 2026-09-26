@@ -6,4 +6,11 @@ db.sqlite3
 __pycache__/
 *.py[cod]
 staticfiles/
+.private_uploads/
 __pycache__/*.pyc
+design-lab/
+tmp/
+doc/
+docs/
+prompts/
+output/

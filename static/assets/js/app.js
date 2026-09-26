@@ -40,7 +40,9 @@ function setupAI(){
   const close = document.getElementById('aiClose');
   const insight = document.getElementById('aiInsightText');
   if(!panel) return;
+  panel.inert = true;
   let requestedInsight = false;
+  let returnFocus = null;
   const loadInsight = () => {
     if(requestedInsight || !insight || !panel.dataset.aiUrl) return;
     requestedInsight = true;
@@ -64,11 +66,27 @@ function setupAI(){
         insight.textContent = 'Nao foi possivel consultar a IA agora.';
       });
   };
-  toggle && toggle.addEventListener('click', ()=>{
+  const openPanel = () => {
+    returnFocus = document.activeElement;
+    panel.inert = false;
     panel.classList.add('open');
+    panel.setAttribute('aria-hidden', 'false');
+    toggle && toggle.setAttribute('aria-expanded', 'true');
+    close && close.focus();
     loadInsight();
+  };
+  const closePanel = () => {
+    panel.classList.remove('open');
+    panel.setAttribute('aria-hidden', 'true');
+    panel.inert = true;
+    toggle && toggle.setAttribute('aria-expanded', 'false');
+    if(returnFocus && typeof returnFocus.focus === 'function') returnFocus.focus();
+  };
+  toggle && toggle.addEventListener('click', openPanel);
+  close && close.addEventListener('click', closePanel);
+  document.addEventListener('keydown', event => {
+    if(event.key === 'Escape' && panel.classList.contains('open')) closePanel();
   });
-  close && close.addEventListener('click', ()=>panel.classList.remove('open'));
 }
 
 function moneyToNumber(value){

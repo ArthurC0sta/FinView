@@ -1,0 +1,21 @@
+{% extends 'gastos/app.html' %}
+{% block title %}Importações | FinView{% endblock %}
+{% block app_content %}
+<div class="product-page">
+  <header class="product-header"><div><p class="business-context">{{ current_business.name }} <span>·</span> armazenamento privado</p><h1>Importar dados</h1><p>Envie um arquivo, revise cada linha e só então confirme a criação das movimentações.</p></div></header>
+  <section class="import-layout">
+    <div class="product-surface">
+      <p class="section-kicker">Novo lote</p><h2>Selecione o arquivo</h2>
+      <form method="post" enctype="multipart/form-data" class="product-form import-upload-form">
+        {% csrf_token %}<label><span>{{ form.file.label }}</span>{{ form.file }}{% for error in form.file.errors %}<small class="field-error">{{ error }}</small>{% endfor %}</label>
+        <details class="mapping-fields"><summary>Mapeamento para CSV / XLS</summary><p>Informe os nomes exatos do cabeçalho. Para XLS, você também pode escolher a aba.</p><div class="field-grid two">{% for field in form %}{% if field.name != 'file' %}<label><span>{{ field.label }}</span>{{ field }}{% for error in field.errors %}<small class="field-error">{{ error }}</small>{% endfor %}</label>{% endif %}{% endfor %}</div></details>
+        <button class="product-btn primary" type="submit"><i class="ph ph-upload-simple"></i>Validar arquivo</button>
+      </form>
+      <div class="accepted-formats"><span>OFX / OFC</span><span>CSV / XLS</span><span>PDF textual</span><span>CNAB 240 / 400</span></div>
+      <p class="context-note"><i class="ph ph-shield-check"></i>Limite de 10 MiB e 1.000 linhas. PDF digitalizado e layouts desconhecidos são rejeitados.</p>
+    </div>
+    <div class="product-surface"><div class="section-heading"><div><p class="section-kicker">Histórico</p><h2>Lotes recentes</h2></div></div><div class="batch-list">{% for batch in batches %}<a href="{% url 'gastos:import_review' batch.public_id %}"><div><strong>{{ batch.original_name }}</strong><small>{{ batch.get_file_format_display }} · {{ batch.created_at|date:'d/m/Y H:i' }}</small></div><span class="status-badge">{{ batch.get_status_display }}</span></a>{% empty %}<div class="empty-state"><i class="ph ph-files"></i><strong>Nenhum lote enviado</strong><p>O histórico estruturado aparecerá aqui.</p></div>{% endfor %}</div></div>
+  </section>
+  <p class="product-disclaimer"><i class="ph ph-info"></i><span>A prévia não grava movimentações. Sugestões de categoria nunca são aplicadas automaticamente.</span></p>
+</div>
+{% endblock %}

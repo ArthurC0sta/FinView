@@ -1,141 +1,15 @@
 {% extends 'gastos/app.html' %}
-
-{% block title %}Metas financeiras — FinView AI{% endblock %}
-{% block description %}Cadastre e acompanhe suas metas financeiras.{% endblock %}
-
+{% block title %}Metas empresariais | FinView{% endblock %}
+{% block description %}Cadastre e acompanhe metas financeiras da empresa.{% endblock %}
 {% block app_content %}
-<div style="max-width:1200px">
-  <div class="flex justify-between items-center mb-6" style="flex-wrap:wrap;gap:1rem">
-    <div>
-      <p class="uppercase-tag">Planejamento</p>
-      <h1 class="font-display text-4xl font-bold mt-2">Metas financeiras</h1>
-      <p class="muted mt-2">Transforme seu objetivo em um valor, um prazo e um ritmo mensal.</p>
-    </div>
-    <span class="chip">{{ goals_count }} meta{{ goals_count|pluralize }}</span>
+<div class="product-page goals-page">
+  <header class="product-header"><div><p class="business-context">{{ current_business.name }} <span>/</span> Planejamento</p><h1>Metas empresariais</h1><p>Acompanhe valor, prazo e ritmo necessário sem confundir reserva com resultado.</p></div><span class="count-badge">{{ goals_count }} meta{{ goals_count|pluralize }}</span></header>
+  {% if messages %}<div class="message-stack">{% for message in messages %}<div class="inline-message" role="status"><i class="ph ph-check-circle"></i><p>{{ message }}</p></div>{% endfor %}</div>{% endif %}
+  <section class="transaction-summary" aria-label="Contexto financeiro"><div><span>Entradas do mês</span><strong>{{ income_amount_display }}</strong><small>Realizado</small></div><div><span>Saídas do mês</span><strong>{{ total_expenses_display }}</strong><small>Realizado</small></div><div><span>Saldo disponível</span><strong>{{ monthly_balance_display }}</strong><small>Não representa lucro</small></div><div><span>Metas cadastradas</span><strong>{{ goals_count }}</strong><small>Todos os estados</small></div></section>
+  <div class="goals-layout">
+    <form class="product-surface product-form goal-form" action="{% url 'gastos:goals' %}" method="post" novalidate>{% csrf_token %}<div class="section-heading"><div><p class="section-kicker">Planejamento manual</p><h2>Nova meta</h2></div></div>{% if form.non_field_errors %}<div class="inline-message" role="alert"><i class="ph ph-warning"></i><div>{{ form.non_field_errors }}</div></div>{% endif %}<label><span>{{ form.name.label }}</span>{{ form.name }}{% for error in form.name.errors %}<small class="field-error">{{ error }}</small>{% endfor %}</label><div class="field-grid two"><label><span>{{ form.target_amount.label }}</span>{{ form.target_amount }}{% for error in form.target_amount.errors %}<small class="field-error">{{ error }}</small>{% endfor %}</label><label><span>{{ form.saved_amount.label }}</span>{{ form.saved_amount }}{% for error in form.saved_amount.errors %}<small class="field-error">{{ error }}</small>{% endfor %}</label></div><div class="field-grid two"><label><span>{{ form.target_date.label }}</span>{{ form.target_date }}{% for error in form.target_date.errors %}<small class="field-error">{{ error }}</small>{% endfor %}</label><label><span>{{ form.goal_type.label }}</span>{{ form.goal_type }}{% for error in form.goal_type.errors %}<small class="field-error">{{ error }}</small>{% endfor %}</label></div><label><span>{{ form.priority.label }}</span>{{ form.priority }}{% for error in form.priority.errors %}<small class="field-error">{{ error }}</small>{% endfor %}</label><label><span>{{ form.notes.label }}</span>{{ form.notes }}{% for error in form.notes.errors %}<small class="field-error">{{ error }}</small>{% endfor %}</label><button type="submit" class="product-btn primary"><i class="ph ph-plus"></i> Criar meta</button></form>
+    <section class="goals-list" aria-label="Metas cadastradas">{% for goal in goals %}<article class="product-surface goal-card"><div class="goal-card-head"><div><span class="status-badge">{{ goal.status }}</span><h2>{{ goal.name }}</h2><p>{{ goal.type }} <span>/</span> Prioridade {{ goal.priority|lower }}</p></div><strong>{{ goal.progress_percent }}%</strong></div><div class="goal-progress" role="progressbar" aria-label="Progresso de {{ goal.name }}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ goal.progress_percent }}"><i style="width:{{ goal.progress_percent }}%"></i></div><dl class="goal-card-values"><div><dt>Alvo</dt><dd>{{ goal.target_amount }}</dd></div><div><dt>Reservado</dt><dd>{{ goal.saved_amount }}</dd></div><div><dt>Falta</dt><dd>{{ goal.remaining_amount }}</dd></div></dl><div class="goal-card-footer"><div><p><span>Prazo</span>{% if goal.target_date %}{{ goal.target_date|date:"d/m/Y" }}{% else %}Sem prazo definido{% endif %}</p><p><span>Ritmo necessário</span>{{ goal.required_monthly_amount }}</p>{% if goal.notes %}<small>{{ goal.notes }}</small>{% endif %}</div><form action="{% url 'gastos:delete_goal' goal.id %}" method="post" onsubmit="return confirm('Excluir esta meta financeira?');">{% csrf_token %}<button type="submit" class="icon-danger" aria-label="Excluir {{ goal.name }}"><i class="ph ph-trash"></i></button></form></div></article>{% empty %}<div class="product-surface empty-state"><i class="ph ph-target"></i><strong>Nenhuma meta cadastrada</strong><p>Use o formulário para criar seu primeiro objetivo mensurável.</p></div>{% endfor %}</section>
   </div>
-
-  {% if messages %}
-    <div class="mb-4">
-      {% for message in messages %}
-        <div class="form-alert" role="status" aria-live="polite">
-          <span class="form-alert-icon">✓</span>
-          <p>{{ message }}</p>
-        </div>
-      {% endfor %}
-    </div>
-  {% endif %}
-
-  <div class="grid g2" style="align-items:start">
-    <form class="glass-strong" action="{% url 'gastos:goals' %}" method="post" novalidate>
-      {% csrf_token %}
-      <h2 class="font-display text-lg font-semibold mb-4">Nova meta</h2>
-
-      {% if form.non_field_errors %}
-        <div class="form-alert mb-4" role="alert">
-          <span class="form-alert-icon">!</span>
-          <div>{{ form.non_field_errors }}</div>
-        </div>
-      {% endif %}
-
-      <label class="label" for="{{ form.name.id_for_label }}">{{ form.name.label }}</label>
-      {{ form.name }}
-      {% for error in form.name.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
-
-      <div class="grid g2 mt-4">
-        <div>
-          <label class="label" for="{{ form.target_amount.id_for_label }}">{{ form.target_amount.label }}</label>
-          {{ form.target_amount }}
-          {% for error in form.target_amount.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
-        </div>
-        <div>
-          <label class="label" for="{{ form.saved_amount.id_for_label }}">{{ form.saved_amount.label }}</label>
-          {{ form.saved_amount }}
-          {% for error in form.saved_amount.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
-        </div>
-      </div>
-
-      <div class="grid g2 mt-4">
-        <div>
-          <label class="label" for="{{ form.target_date.id_for_label }}">{{ form.target_date.label }}</label>
-          {{ form.target_date }}
-          {% for error in form.target_date.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
-        </div>
-        <div>
-          <label class="label" for="{{ form.goal_type.id_for_label }}">{{ form.goal_type.label }}</label>
-          {{ form.goal_type }}
-          {% for error in form.goal_type.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
-        </div>
-      </div>
-
-      <label class="label mt-4" for="{{ form.priority.id_for_label }}">{{ form.priority.label }}</label>
-      {{ form.priority }}
-      {% for error in form.priority.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
-
-      <label class="label mt-4" for="{{ form.notes.id_for_label }}">{{ form.notes.label }}</label>
-      {{ form.notes }}
-      {% for error in form.notes.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
-
-      <button type="submit" class="btn btn-primary mt-6" style="width:100%">Criar meta financeira</button>
-    </form>
-
-    <div>
-      <div class="grid g3 mb-4">
-        <div class="glass">
-          <p class="text-xs muted">Renda do mês</p>
-          <p class="font-display text-lg font-bold mt-2">{{ income_amount_display }}</p>
-        </div>
-        <div class="glass">
-          <p class="text-xs muted">Gastos do mês</p>
-          <p class="font-display text-lg font-bold mt-2">{{ total_expenses_display }}</p>
-        </div>
-        <div class="glass">
-          <p class="text-xs muted">Saldo disponível</p>
-          <p class="font-display text-lg font-bold text-gradient mt-2">{{ monthly_balance_display }}</p>
-        </div>
-      </div>
-
-      {% for goal in goals %}
-        <article class="glass mb-4">
-          <div class="flex justify-between items-center" style="gap:1rem;flex-wrap:wrap">
-            <div>
-              <span class="chip">{{ goal.type }} · {{ goal.priority }}</span>
-              <h2 class="font-display text-lg font-semibold mt-2">{{ goal.name }}</h2>
-            </div>
-            <span class="chip">{{ goal.status }}</span>
-          </div>
-
-          <div class="flex justify-between text-sm mt-4">
-            <span class="muted">Progresso</span>
-            <strong>{{ goal.progress_percent }}%</strong>
-          </div>
-          <div class="bar-track mt-2"><div class="bar-fill" style="width:{{ goal.progress_percent }}%"></div></div>
-
-          <div class="grid g3 mt-4">
-            <div><p class="text-xs muted">Alvo</p><p class="font-semibold mt-2">{{ goal.target_amount }}</p></div>
-            <div><p class="text-xs muted">Guardado</p><p class="font-semibold mt-2">{{ goal.saved_amount }}</p></div>
-            <div><p class="text-xs muted">Falta</p><p class="font-semibold mt-2">{{ goal.remaining_amount }}</p></div>
-          </div>
-
-          <div class="divider"></div>
-          <div class="flex justify-between items-center" style="gap:1rem;flex-wrap:wrap">
-            <div class="text-sm">
-              <p><span class="muted">Prazo:</span> {% if goal.target_date %}{{ goal.target_date|date:"d/m/Y" }}{% else %}Sem prazo definido{% endif %}</p>
-              <p class="mt-2"><span class="muted">Ritmo necessário:</span> {{ goal.required_monthly_amount }}</p>
-              {% if goal.notes %}<p class="muted mt-2">{{ goal.notes }}</p>{% endif %}
-            </div>
-            <form action="{% url 'gastos:delete_goal' goal.id %}" method="post" onsubmit="return confirm('Excluir esta meta financeira?');">
-              {% csrf_token %}
-              <button type="submit" class="btn btn-danger btn-sm">Excluir</button>
-            </form>
-          </div>
-        </article>
-      {% empty %}
-        <div class="glass text-center">
-          <p class="font-display text-lg font-semibold">Nenhuma meta cadastrada</p>
-          <p class="text-sm muted mt-2">Use o formulário para criar seu primeiro objetivo mensurável.</p>
-        </div>
-      {% endfor %}
-    </div>
-  </div>
+  <p class="product-disclaimer"><i class="ph ph-info"></i><span>Valores reservados para metas representam destinação de caixa, não lucro empresarial.</span></p>
 </div>
 {% endblock %}

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Segurança da Informação para FinView"
+  short_description: "Avalia riscos, controles e privacidade do FinView"
+  default_prompt: "Use $seguranca-informacao-finview para avaliar este risco ou decisão com evidências, prioridade, controles e validações necessárias."

@@ -20,7 +20,13 @@ services:
       - key: GROQ_API_KEY
         sync: false
       - key: GROQ_MODEL
-        value: "llama-3.3-70b-versatile"
+        value: "openai/gpt-oss-120b"
+      - key: GROQ_ANALYSIS_MODEL
+        value: "openai/gpt-oss-120b"
+      - key: GROQ_CLASSIFICATION_MODEL
+        value: "openai/gpt-oss-20b"
+      - key: GROQ_TIMEOUT_SECONDS
+        value: "20"
       - key: SECURE_SSL_REDIRECT
         value: "True"
       - key: SECURE_HSTS_SECONDS

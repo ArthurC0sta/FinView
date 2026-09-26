@@ -21,7 +21,10 @@ env = environ.Env(
     DEBUG=(bool, False),
     ALLOWED_HOSTS=(list, []),
     CSRF_TRUSTED_ORIGINS=(list, []),
-    GROQ_MODEL=(str, 'llama-3.3-70b-versatile'),
+    GROQ_MODEL=(str, 'openai/gpt-oss-120b'),
+    GROQ_ANALYSIS_MODEL=(str, 'openai/gpt-oss-120b'),
+    GROQ_CLASSIFICATION_MODEL=(str, 'openai/gpt-oss-20b'),
+    GROQ_TIMEOUT_SECONDS=(int, 20),
 )
 environ.Env.read_env(BASE_DIR / '.env')
 
@@ -160,6 +163,9 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = [BASE_DIR / 'static']
+MEDIA_ROOT = BASE_DIR / '.private_uploads'
+FINVIEW_IMPORT_MAX_BYTES = env.int('FINVIEW_IMPORT_MAX_BYTES', default=10 * 1024 * 1024)
+FINVIEW_IMPORT_MAX_ROWS = env.int('FINVIEW_IMPORT_MAX_ROWS', default=1000)
 STORAGES = {
     'default': {
         'BACKEND': 'django.core.files.storage.FileSystemStorage',
@@ -185,3 +191,10 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 GROQ_API_KEY = env('GROQ_API_KEY', default=env('API_KEY', default=''))
 GROQ_MODEL = env('GROQ_MODEL')
+GROQ_ANALYSIS_MODEL = env('GROQ_ANALYSIS_MODEL', default=GROQ_MODEL)
+GROQ_CLASSIFICATION_MODEL = env('GROQ_CLASSIFICATION_MODEL')
+GROQ_TIMEOUT_SECONDS = env.int('GROQ_TIMEOUT_SECONDS')
+
+LOGIN_URL = 'gastos:login'
+LOGIN_REDIRECT_URL = 'gastos:dashboard'
+SESSION_COOKIE_AGE = 8 * 60 * 60
