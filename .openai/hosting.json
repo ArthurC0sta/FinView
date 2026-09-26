@@ -1,0 +1,11 @@
+{
+  "project_id": null,
+  "d1": "DB",
+  "r2": "UPLOADS",
+  "static": {
+    "directory": "sites-app/dist"
+  },
+  "worker": {
+    "entrypoint": "sites-app/dist/_worker.js"
+  }
+}
