@@ -93,6 +93,66 @@ def gerar_resposta_financeira(
     return (content or '').strip()
 
 
+ANALYSIS_SCHEMA = {
+    'type': 'object',
+    'properties': {
+        'diagnostico': {'type': 'string', 'maxLength': 320},
+        'evidencias': {'type': 'array', 'items': {'type': 'string', 'maxLength': 180}, 'maxItems': 3},
+        'risco': {'type': 'string', 'maxLength': 240},
+        'acoes': {'type': 'array', 'items': {'type': 'string', 'maxLength': 180}, 'maxItems': 3},
+        'qualidade_dados': {'type': 'string', 'maxLength': 180},
+    },
+    'required': ['diagnostico', 'evidencias', 'risco', 'acoes', 'qualidade_dados'],
+    'additionalProperties': False,
+}
+
+
+def gerar_analise_estruturada(contexto):
+    """Gera uma leitura curta e semanticamente renderizável, sem Markdown livre."""
+    request = {
+        'model': model_for_purpose('analysis'),
+        'messages': [
+            {
+                'role': 'system',
+                'content': (
+                    f'{carregar_prompt_consultor()}\n'
+                    'Responda exclusivamente em português do Brasil. Não use Markdown, inglês ou asteriscos. '
+                    'Não trate saldo como lucro. Seja objetivo e use somente os dados fornecidos.'
+                ),
+            },
+            {'role': 'user', 'content': f'Resuma o período no formato solicitado. Dados agregados:\n{contexto}'},
+        ],
+        'response_format': {
+            'type': 'json_schema',
+            'json_schema': {'name': 'finview_analysis', 'strict': True, 'schema': ANALYSIS_SCHEMA},
+        },
+        'temperature': 0.1,
+        'max_completion_tokens': 650,
+        'include_reasoning': False,
+    }
+    client = groq_client()
+    try:
+        completion = client.chat.completions.create(**request)
+    except NotFoundError:
+        request['model'] = settings.GROQ_CLASSIFICATION_MODEL
+        completion = client.chat.completions.create(**request)
+    try:
+        data = json.loads(completion.choices[0].message.content or '{}')
+    except (json.JSONDecodeError, AttributeError, IndexError) as exc:
+        raise ValueError('A IA retornou uma análise inválida.') from exc
+    if set(data) != set(ANALYSIS_SCHEMA['required']):
+        raise ValueError('A IA retornou uma análise incompleta.')
+    if not all(isinstance(data[key], str) for key in ('diagnostico', 'risco', 'qualidade_dados')):
+        raise ValueError('A IA retornou textos inválidos.')
+    if not all(isinstance(data[key], list) and all(isinstance(item, str) for item in data[key]) for key in ('evidencias', 'acoes')):
+        raise ValueError('A IA retornou listas inválidas.')
+    data['evidencias'] = [str(item).strip()[:180] for item in data['evidencias'][:3] if str(item).strip()]
+    data['acoes'] = [str(item).strip()[:180] for item in data['acoes'][:3] if str(item).strip()]
+    for key in ('diagnostico', 'risco', 'qualidade_dados'):
+        data[key] = str(data[key]).strip()
+    return data
+
+
 def classificar_descricoes(descriptions, categories):
     """Sugere categorias sem persistir ou enviar dados identificáveis."""
     clean_descriptions = [str(item).strip()[:180] for item in descriptions if str(item).strip()]
@@ -109,8 +169,9 @@ def classificar_descricoes(descriptions, categories):
             'index': {'type': 'integer'},
             'category_id': {'type': 'integer'},
             'confidence': {'type': 'number'},
+            'corrected_description': {'type': 'string', 'maxLength': 180},
         },
-        'required': ['index', 'category_id', 'confidence'],
+        'required': ['index', 'category_id', 'confidence', 'corrected_description'],
         'additionalProperties': False,
     }
     schema = {
@@ -125,7 +186,7 @@ def classificar_descricoes(descriptions, categories):
             {
                 'role': 'user',
                 'content': (
-                    'Classifique cada descrição usando somente os IDs permitidos. '
+                    'Classifique cada descrição usando somente os IDs permitidos e sugira uma correção ortográfica curta em português, preservando nomes próprios. '
                     f'Descrições: {clean_descriptions}. Categorias: {allowed_categories}.'
                 ),
             }
@@ -160,6 +221,7 @@ def classificar_descricoes(descriptions, categories):
                     'index': index,
                     'category_id': category_id,
                     'confidence': max(0, min(float(confidence), 1)),
+                    'corrected_description': str(suggestion.get('corrected_description') or '').strip()[:180],
                 }
             )
     return valid

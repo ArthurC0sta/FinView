@@ -12,7 +12,7 @@ from django.urls import reverse
 from django.utils import timezone
 from unittest.mock import patch
 
-from .ia import classificar_descricoes, carregar_prompt_consultor, gerar_resposta_financeira
+from .ia import classificar_descricoes, carregar_prompt_consultor, gerar_analise_estruturada, gerar_resposta_financeira
 from .models import (
     Business,
     BusinessProfileAssessment,
@@ -352,7 +352,7 @@ class FinancialGoalViewTests(TestCase):
     def test_cria_meta_valida_para_usuario_autenticado(self):
         response = self.client.post(
             reverse('gastos:goals'),
-            self.goal_data(target_amount='6.000,00', saved_amount='500,00'),
+            self.goal_data(target_amount='R$ 6.000,00', saved_amount='R$ 500,00'),
         )
 
         self.assertRedirects(response, reverse('gastos:goals'))
@@ -625,8 +625,8 @@ class GroqIntegrationTests(TestCase):
                     message=SimpleNamespace(
                         content=(
                             '{"suggestions": ['
-                            '{"index": 0, "category_id": 7, "confidence": 0.91},'
-                            '{"index": 1, "category_id": 999, "confidence": 0.99}'
+                            '{"index": 0, "category_id": 7, "confidence": 0.91, "corrected_description": "Hospedagem do site"},'
+                            '{"index": 1, "category_id": 999, "confidence": 0.99, "corrected_description": "Descrição desconhecida"}'
                             ']}'
                         )
                     )
@@ -639,10 +639,39 @@ class GroqIntegrationTests(TestCase):
             [{'id': 7, 'name': 'Sistemas'}],
         )
 
-        self.assertEqual(result, [{'index': 0, 'category_id': 7, 'confidence': 0.91}])
+        self.assertEqual(result, [{'index': 0, 'category_id': 7, 'confidence': 0.91, 'corrected_description': 'Hospedagem do site'}])
         call_kwargs = groq_mock.return_value.chat.completions.create.call_args.kwargs
         self.assertEqual(call_kwargs['model'], 'openai/gpt-oss-20b')
         self.assertTrue(call_kwargs['response_format']['json_schema']['strict'])
+
+    @override_settings(GROQ_API_KEY='test-key', GROQ_ANALYSIS_MODEL='analysis-model', GROQ_CLASSIFICATION_MODEL='fallback-model')
+    @patch('gastos.ia.Groq')
+    def test_analise_estruturada_rejeita_markdown_livre_e_retorna_secoes(self, groq_mock):
+        groq_mock.return_value.chat.completions.create.return_value = SimpleNamespace(
+            choices=[SimpleNamespace(message=SimpleNamespace(content='{"diagnostico":"Caixa apertado.","evidencias":["Saídas próximas das entradas."],"risco":"Baixa margem de caixa.","acoes":["Revisar despesas fixas."],"qualidade_dados":"Sem valores previstos."}'))]
+        )
+
+        result = gerar_analise_estruturada('Entradas: R$ 1.000,00; saídas: R$ 950,00.')
+
+        self.assertEqual(result['diagnostico'], 'Caixa apertado.')
+        self.assertEqual(result['acoes'], ['Revisar despesas fixas.'])
+        call_kwargs = groq_mock.return_value.chat.completions.create.call_args.kwargs
+        self.assertEqual(call_kwargs['response_format']['type'], 'json_schema')
+        self.assertTrue(call_kwargs['response_format']['json_schema']['strict'])
+
+    @override_settings(GROQ_API_KEY='test-key')
+    @patch('gastos.views.gerar_analise_estruturada')
+    def test_endpoint_de_ia_retorna_contrato_estruturado(self, analysis_mock):
+        user = User.objects.create_user(username='insight@example.com', email='insight@example.com', password='senha12345')
+        complete_profile(user)
+        self.client.force_login(user)
+        analysis_mock.return_value = {'diagnostico': 'Estável.', 'evidencias': [], 'risco': 'Nenhum crítico.', 'acoes': [], 'qualidade_dados': 'Parcial.'}
+
+        response = self.client.post(reverse('gastos:ai_financial_insight'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()['analysis']['diagnostico'], 'Estável.')
+        self.assertNotIn('message', response.json())
 
     @override_settings(GROQ_API_KEY='')
     def test_endpoint_informa_quando_api_key_nao_esta_configurada(self):

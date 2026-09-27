@@ -1,4 +1,5 @@
 from decimal import Decimal
+import re
 
 from django import forms
 from django.contrib.auth import authenticate
@@ -6,7 +7,7 @@ from django.contrib.auth.forms import PasswordResetForm, SetPasswordForm, UserCr
 from django.contrib.auth.models import User
 from django.utils import timezone
 
-from .models import Business, FinancialGoal, ImportRow, ManagerialCategory
+from .models import Business, BusinessProfileAssessment, FinancialGoal, ImportRow, ManagerialCategory
 
 
 class LoginForm(forms.Form):
@@ -96,42 +97,68 @@ class BusinessOnboardingForm(forms.ModelForm):
         return self.cleaned_data.get('state', '').strip().upper()
 
 
-PROFILE_CHOICES = [
-    ('0', 'Inicial'),
-    ('1', 'Intermediário'),
-    ('2', 'Estruturado'),
-    ('unknown', 'Não sei informar'),
-]
+UNKNOWN = ('unknown', 'Não sei informar')
+OTHER = ('other', 'Outro cenário (descreva abaixo)')
 
 
 class MaturityProfileForm(forms.Form):
-    records = forms.ChoiceField(label='Como o negócio registra entradas e saídas?', choices=PROFILE_CHOICES)
-    update_frequency = forms.ChoiceField(label='Com que frequência os dados são atualizados?', choices=PROFILE_CHOICES)
-    monthly_volume = forms.ChoiceField(label='Qual é o volume mensal de movimentações?', choices=PROFILE_CHOICES)
-    future_commitments = forms.ChoiceField(label='Como são controladas contas a pagar e receber?', choices=PROFILE_CHOICES)
-    people_involved = forms.ChoiceField(label='Quem participa da gestão financeira?', choices=PROFILE_CHOICES)
-    predictability = forms.ChoiceField(label='Quanto o negócio consegue prever suas receitas?', choices=PROFILE_CHOICES)
-    management_need = forms.ChoiceField(label='Qual é a principal necessidade atual?', choices=PROFILE_CHOICES)
-    advanced_controls = forms.ChoiceField(label='Quais controles avançados são necessários?', choices=PROFILE_CHOICES)
+    records = forms.ChoiceField(label='Como o negócio registra entradas e saídas?', choices=[('0','Não registra de forma organizada'),('1','Registra parte das movimentações'),('2','Registra todas em uma rotina definida'), UNKNOWN, OTHER])
+    update_frequency = forms.ChoiceField(label='Com que frequência os dados são atualizados?', choices=[('0','Somente quando surge uma necessidade'),('1','Uma ou duas vezes por mês'),('2','Semanalmente ou com maior frequência'), UNKNOWN, OTHER])
+    monthly_volume = forms.ChoiceField(label='Qual é o volume mensal de movimentações?', choices=[('0','Até 20 lançamentos'),('1','De 21 a 100 lançamentos'),('2','Mais de 100 lançamentos'), UNKNOWN, OTHER])
+    future_commitments = forms.ChoiceField(label='Como são controladas contas a pagar e receber?', choices=[('0','Não há controle antecipado'),('1','Parte dos compromissos é acompanhada'),('2','Valores e vencimentos são registrados'), UNKNOWN, OTHER])
+    people_involved = forms.ChoiceField(label='Quem participa da gestão financeira?', choices=[('0','Somente o proprietário, sem rotina'),('1','O proprietário com apoio eventual'),('2','Há responsáveis e rotina definida'), UNKNOWN, OTHER])
+    predictability = forms.ChoiceField(label='Quanto o negócio consegue prever suas receitas?', choices=[('0','Não consegue prever'),('1','Possui uma estimativa aproximada'),('2','Acompanha previsões e confirmações'), UNKNOWN, OTHER])
+    management_need = forms.ChoiceField(label='Qual é a principal necessidade atual?', choices=[('0','Organizar os dados básicos'),('1','Acompanhar caixa e compromissos'),('2','Comparar indicadores e planejar ações'), UNKNOWN, OTHER])
+    advanced_controls = forms.ChoiceField(label='Quais controles avançados são necessários?', choices=[('0','Nenhum neste momento'),('1','Metas, alertas ou projeções simples'),('2','Indicadores, cenários e acompanhamento frequente'), UNKNOWN, OTHER])
+    other_context = forms.CharField(
+        label='Outro cenário (opcional)', required=False,
+        widget=forms.Textarea(attrs={'class': 'textarea', 'rows': 3, 'spellcheck': 'true', 'placeholder': 'Descreva o que não apareceu nas opções.'}),
+    )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        for field in self.fields.values():
-            field.widget.attrs['class'] = 'select'
+        for name, field in self.fields.items():
+            if name != 'other_context':
+                field.widget.attrs['class'] = 'select'
+
+    def clean(self):
+        cleaned = super().clean()
+        for name in tuple(self.fields):
+            if name == 'other_context':
+                continue
+            if cleaned.get(name) == 'other':
+                cleaned[name] = 'unknown'
+        return cleaned
 
 
 class ProfilePreferencesForm(forms.Form):
-    language = forms.ChoiceField(choices=[('simple', 'Simples'), ('balanced', 'Equilibrada'), ('technical', 'Técnica')], required=False)
-    detail = forms.ChoiceField(choices=[('summary', 'Resumo'), ('balanced', 'Equilibrado'), ('detailed', 'Detalhado')], required=False)
-    focus = forms.ChoiceField(choices=[('cash', 'Proteção do caixa'), ('balance', 'Equilíbrio'), ('growth', 'Crescimento')], required=False)
-    frequency = forms.ChoiceField(choices=[('weekly', 'Semanal'), ('biweekly', 'Quinzenal'), ('monthly', 'Mensal')], required=False)
-    alerts = forms.ChoiceField(choices=[('immediate', 'Imediatos'), ('digest', 'Resumo periódico')], required=False)
+    language = forms.ChoiceField(label='Linguagem', choices=[('simple', 'Direta e simples'), ('balanced', 'Equilibrada'), ('technical', 'Mais técnica')], required=False)
+    detail = forms.ChoiceField(label='Nível de detalhe', choices=[('summary', 'Objetivo'), ('balanced', 'Intermediário'), ('detailed', 'Detalhado')], required=False)
+    frequency = forms.ChoiceField(label='Frequência de acompanhamento', choices=[('weekly', 'Semanal'), ('biweekly', 'Quinzenal'), ('monthly', 'Mensal')], required=False)
+    alerts = forms.ChoiceField(label='Como receber alertas', choices=[('immediate', 'Assim que forem identificados'), ('digest', 'Em um resumo periódico')], required=False)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         for field in self.fields.values():
             field.widget.attrs['class'] = 'select'
 
+
+class ProfileLevelChoiceForm(forms.ModelForm):
+    class Meta:
+        model = BusinessProfileAssessment
+        fields = ('selected_level', 'level_override_reason')
+        labels = {'selected_level': 'Nível escolhido', 'level_override_reason': 'Por que este nível atende melhor agora?'}
+        widgets = {
+            'selected_level': forms.RadioSelect(attrs={'class': 'level-options'}),
+            'level_override_reason': forms.Textarea(attrs={'rows': 3, 'class': 'textarea', 'spellcheck': 'true'}),
+        }
+
+    def clean(self):
+        cleaned = super().clean()
+        selected = cleaned.get('selected_level')
+        if selected and selected != self.instance.recommended_level and not (cleaned.get('level_override_reason') or '').strip():
+            self.add_error('level_override_reason', 'Explique brevemente por que prefere um nível diferente.')
+        return cleaned
 
 class ImportUploadForm(forms.Form):
     file = forms.FileField(
@@ -198,8 +225,11 @@ class FinancialGoalForm(forms.ModelForm):
             data = data.copy()
             for field_name in ('target_amount', 'saved_amount'):
                 raw_value = data.get(field_name, '')
-                if isinstance(raw_value, str) and ',' in raw_value:
-                    data[field_name] = raw_value.replace('.', '').replace(',', '.')
+                if isinstance(raw_value, str):
+                    raw_value = re.sub(r'[^\d,.-]', '', raw_value)
+                    if ',' in raw_value:
+                        raw_value = raw_value.replace('.', '').replace(',', '.')
+                    data[field_name] = raw_value
         super().__init__(data, *args, **kwargs)
 
     class Meta:
@@ -245,10 +275,10 @@ class FinancialGoalForm(forms.ModelForm):
                 attrs={'class': 'input money-input', 'inputmode': 'decimal', 'autocomplete': 'off'}
             ),
             'target_date': forms.DateInput(attrs={'class': 'input', 'type': 'date'}, format='%Y-%m-%d'),
-            'goal_type': forms.Select(attrs={'class': 'select'}),
+            'goal_type': forms.RadioSelect(attrs={'class': 'goal-type-input'}),
             'priority': forms.Select(attrs={'class': 'select'}),
             'notes': forms.Textarea(
-                attrs={'class': 'textarea', 'rows': 3, 'placeholder': 'Detalhes adicionais...'}
+                attrs={'class': 'textarea', 'rows': 3, 'placeholder': 'Detalhes adicionais...', 'spellcheck': 'true'}
             ),
         }
 

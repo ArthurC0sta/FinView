@@ -19,9 +19,10 @@ from .forms import (
     LoginForm,
     MaturityProfileForm,
     ProfilePreferencesForm,
+    ProfileLevelChoiceForm,
     SignupForm,
 )
-from .ia import gerar_resposta_financeira, groq_configured
+from .ia import gerar_analise_estruturada, gerar_resposta_financeira, groq_configured
 from .import_service import confirm_batch, create_batch, remove_raw_file
 from .models import (
     Business,
@@ -233,7 +234,7 @@ def money(value):
 
 
 def decimal_from_post(value, default='0'):
-    raw = (value or default).strip()
+    raw = (value or default).strip().replace('R$', '').replace(' ', '')
     if ',' in raw:
         raw = raw.replace('.', '').replace(',', '.')
     try:
@@ -571,6 +572,8 @@ def onboarding_preferences(request):
     form = ProfilePreferencesForm(request.POST or None, initial=assessment.preferences)
     if request.method == 'POST' and form.is_valid():
         assessment.preferences = form.cleaned_data
+        if not assessment.selected_level:
+            assessment.selected_level = assessment.recommended_level
         assessment.status = BusinessProfileAssessment.Status.COMPLETED
         assessment.completed_at = timezone.now()
         assessment.save()
@@ -587,7 +590,12 @@ def onboarding_result(request):
     levels = dict(BusinessProfileAssessment.Level.choices)
     factors = assessment.determining_factors or {}
     explanation = ''
-    if request.method == 'POST':
+    level_form = ProfileLevelChoiceForm(request.POST or None, instance=assessment)
+    if request.method == 'POST' and request.POST.get('action') == 'choose_level' and level_form.is_valid():
+        level_form.save()
+        messages.success(request, 'Nível de acompanhamento atualizado.')
+        return redirect('gastos:onboarding_result')
+    if request.method == 'POST' and request.POST.get('action') == 'explain':
         if not groq_configured():
             messages.error(request, 'A explicação assistida está temporariamente indisponível.')
         else:
@@ -611,6 +619,7 @@ def onboarding_result(request):
         level_label=levels.get(assessment.recommended_level, 'Resultado inconclusivo'),
         factors=factors,
         explanation=explanation,
+        level_form=level_form,
         onboarding_step=4,
     )
 
@@ -658,11 +667,22 @@ def import_review(request, public_id):
             for row in batch.rows.all():
                 decision = request.POST.get(f'row_{row.id}_decision', row.decision)
                 category_id = request.POST.get(f'row_{row.id}_category')
+                corrected_description = request.POST.get(f'row_{row.id}_description', '').strip()
                 if decision in dict(ImportRow.Decision.choices):
                     row.decision = decision
-                row.confirmed_category = categories.filter(id=category_id).first() if category_id else None
-                row.save(update_fields=['decision', 'confirmed_category', 'updated_at'])
-        messages.success(request, 'Revisão salva. Nenhuma movimentação foi criada ainda.')
+                row.confirmed_category = categories.filter(id=category_id).first() if category_id else row.suggested_category
+                if corrected_description:
+                    row.description = corrected_description[:240]
+                row.save(update_fields=['decision', 'confirmed_category', 'description', 'updated_at'])
+        if request.POST.get('action') == 'confirm':
+            try:
+                created = confirm_batch(batch, request.user)
+            except Exception as exc:
+                messages.error(request, exc.messages[0] if hasattr(exc, 'messages') else str(exc))
+            else:
+                messages.success(request, f'Importação concluída: {created} movimentação(ões) criada(s).')
+        else:
+            messages.success(request, 'Revisão salva. Nenhuma movimentação foi criada ainda.')
         return redirect('gastos:import_review', public_id=batch.public_id)
     return render_page(request, 'gastos/imports/review.html', active_page='imports', user=user, batch=batch, rows=batch.rows.select_related('suggested_category', 'confirmed_category'), categories=categories)
 
@@ -673,8 +693,12 @@ def import_confirm(request, public_id):
     if response:
         return response
     batch = get_object_or_404(ImportBatch, public_id=public_id, business__owner=request.user)
-    created = confirm_batch(batch, request.user)
-    messages.success(request, f'{created} movimentação(ões) criada(s).')
+    try:
+        created = confirm_batch(batch, request.user)
+    except Exception as exc:
+        messages.error(request, exc.messages[0] if hasattr(exc, 'messages') else str(exc))
+    else:
+        messages.success(request, f'Importação concluída: {created} movimentação(ões) criada(s).')
     return redirect('gastos:import_review', public_id=batch.public_id)
 
 
@@ -839,10 +863,7 @@ def ai_financial_insight(request):
         'Analise se os gastos e receitas do mes estao alinhados ao objetivo financeiro e as metas cadastradas do usuario. Responda em ate 5 topicos curtos, cada um iniciado por "-": situacao, meta, viabilidade, ponto de atencao e acao pratica.',
     )
     try:
-        insight = gerar_resposta_financeira(
-            prompt,
-            ai_context_for_month(request.user, reference_month),
-        )
+        insight = gerar_analise_estruturada(ai_context_for_month(request.user, reference_month))
     except Exception:
         return JsonResponse(
             {
@@ -852,7 +873,7 @@ def ai_financial_insight(request):
             status=502,
         )
 
-    return JsonResponse({'ok': True, 'message': insight})
+    return JsonResponse({'ok': True, 'analysis': insight})
 
 
 def goals(request):

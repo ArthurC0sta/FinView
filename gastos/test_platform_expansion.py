@@ -1,4 +1,5 @@
 import tempfile
+import json
 from datetime import timedelta
 from pathlib import Path
 from unittest.mock import patch
@@ -75,7 +76,24 @@ class AuthenticationAndOnboardingTests(TestCase):
         self.client.post(reverse('gastos:onboarding_preferences'), {'language': 'technical', 'detail': 'detailed', 'focus': 'growth', 'frequency': 'weekly', 'alerts': 'immediate'})
         assessment.refresh_from_db()
         self.assertEqual(assessment.recommended_level, original_level)
+        self.assertEqual(assessment.selected_level, original_level)
+        self.assertNotIn('focus', assessment.preferences)
         self.assertEqual(assessment.status, BusinessProfileAssessment.Status.COMPLETED)
+
+    def test_usuario_pode_escolher_nivel_sem_alterar_recomendacao(self):
+        user = User.objects.create_user(username='nivel@example.com', email='nivel@example.com', password='UmaSenha-Forte-2026')
+        assessment = complete_profile(user)
+        self.client.force_login(user)
+
+        response = self.client.post(reverse('gastos:onboarding_result'), {
+            'action': 'choose_level', 'selected_level': 'complete',
+            'level_override_reason': 'Preciso acompanhar cenários e indicadores avançados.',
+        })
+
+        self.assertRedirects(response, reverse('gastos:onboarding_result'))
+        assessment.refresh_from_db()
+        self.assertEqual(assessment.recommended_level, BusinessProfileAssessment.Level.MANAGERIAL)
+        self.assertEqual(assessment.selected_level, BusinessProfileAssessment.Level.COMPLETE)
 
 
 class ProfileRulesTests(TestCase):
@@ -157,6 +175,22 @@ class ImportFlowTests(TestCase):
         self.assertEqual(FinancialTransaction.objects.filter(source=FinancialTransaction.Source.IMPORT).count(), 1)
         batch.refresh_from_db()
         self.assertFalse(bool(batch.stored_file))
+    def test_categoria_sugerida_pode_ser_confirmada_sem_trocar_o_seletor(self):
+        response = self.upload()
+        batch = ImportBatch.objects.get()
+        row = batch.rows.get()
+        row.suggested_category = self.category
+        row.save(update_fields=['suggested_category'])
+
+        response = self.client.post(
+            reverse('gastos:import_review', args=[batch.public_id]),
+            {f'row_{row.id}_decision': 'include', f'row_{row.id}_category': self.category.id, f'row_{row.id}_description': row.description, 'action': 'confirm'},
+        )
+
+        self.assertRedirects(response, reverse('gastos:import_review', args=[batch.public_id]))
+        self.assertEqual(FinancialTransaction.objects.filter(source=FinancialTransaction.Source.IMPORT).count(), 1)
+        batch.refresh_from_db()
+        self.assertEqual(batch.status, ImportBatch.Status.PROCESSED)
 
     def test_duplicate_file_and_other_business_access_are_blocked(self):
         first = self.upload()
@@ -184,3 +218,19 @@ class ImportFlowTests(TestCase):
         batch.refresh_from_db()
         self.assertEqual(batch.status, ImportBatch.Status.EXPIRED)
         self.assertFalse(bool(batch.stored_file))
+
+
+class SitesSnapshotMigrationTests(TestCase):
+    def test_dry_run_valida_snapshot_sem_persistir(self):
+        payload = {
+            'users': [{'id': 'user-1', 'email': 'piloto@example.com'}],
+            'businesses': [{'id': 'business-1', 'owner_user_id': 'user-1', 'name': 'Empresa Piloto'}],
+            'managerial_categories': [], 'financial_transactions': [], 'financial_goals': [],
+            'business_profile_assessments': [], 'import_batches': [], 'import_rows': [],
+        }
+        with tempfile.NamedTemporaryFile('w', suffix='.json', encoding='utf-8') as snapshot:
+            json.dump(payload, snapshot)
+            snapshot.flush()
+            call_command('import_sites_snapshot', snapshot.name, dry_run=True)
+
+        self.assertFalse(User.objects.filter(email='piloto@example.com').exists())

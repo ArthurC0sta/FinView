@@ -260,7 +260,7 @@ def create_batch(*, business, user, uploaded_file, mapping=None):
             fingerprint = row_fingerprint(business.id, row)
             fingerprints.append(fingerprint)
             duplicate = FinancialTransaction.objects.filter(business=business, date=row.date, amount=row.amount, direction=row.direction, name__iexact=row.description).exists() if not row.errors else False
-            objects.append(ImportRow(batch=batch, row_number=row.row_number, date=row.date, description=row.description, amount=row.amount, direction=row.direction, external_identifier=row.external_identifier, fingerprint=fingerprint, validation_status=ImportRow.ValidationStatus.INVALID if row.errors else ImportRow.ValidationStatus.VALID, validation_errors=row.errors, possible_duplicate=duplicate, decision=ImportRow.Decision.PENDING if row.errors else ImportRow.Decision.INCLUDE))
+            objects.append(ImportRow(batch=batch, row_number=row.row_number, date=row.date, description=row.description, original_description=row.description, amount=row.amount, direction=row.direction, external_identifier=row.external_identifier, fingerprint=fingerprint, validation_status=ImportRow.ValidationStatus.INVALID if row.errors else ImportRow.ValidationStatus.VALID, validation_errors=row.errors, possible_duplicate=duplicate, decision=ImportRow.Decision.PENDING if row.errors else ImportRow.Decision.INCLUDE))
         ImportRow.objects.bulk_create(objects)
         batch.total_rows = len(objects)
         batch.valid_rows = sum(not item.validation_errors for item in objects)
@@ -269,6 +269,8 @@ def create_batch(*, business, user, uploaded_file, mapping=None):
         batch.status = ImportBatch.Status.AWAITING_REVIEW
         batch.save()
     suggest_categories(batch)
+    remove_raw_file(batch)
+    batch.save(update_fields=['stored_file', 'updated_at'])
     return batch
 
 
@@ -286,7 +288,9 @@ def suggest_categories(batch):
         row = rows[suggestion['index']]
         row.suggested_category = category_map.get(suggestion['category_id'])
         row.classification_confidence = Decimal(str(suggestion['confidence']))
-        row.save(update_fields=['suggested_category', 'classification_confidence', 'updated_at'])
+        corrected = suggestion.get('corrected_description', '').strip()
+        row.suggested_description = corrected if corrected and corrected.casefold() != row.description.casefold() else ''
+        row.save(update_fields=['suggested_category', 'classification_confidence', 'suggested_description', 'updated_at'])
 
 
 def remove_raw_file(batch):
@@ -303,14 +307,18 @@ def confirm_batch(batch, user):
         locked = ImportBatch.objects.select_for_update().get(pk=batch.pk)
         if locked.status == ImportBatch.Status.PROCESSED:
             return 0
+        incomplete = []
         for row in locked.rows.select_related('confirmed_category', 'suggested_category'):
             if row.decision != ImportRow.Decision.INCLUDE or row.validation_status != ImportRow.ValidationStatus.VALID or row.possible_duplicate:
                 continue
-            category = row.confirmed_category
+            category = row.confirmed_category or row.suggested_category
             if category is None or category.business_id != locked.business_id:
+                incomplete.append(row.row_number)
                 continue
             _, was_created = FinancialTransaction.objects.get_or_create(import_row=row, defaults={'business': locked.business, 'created_by': user, 'direction': row.direction, 'name': row.description, 'amount': row.amount, 'date': row.date, 'category': category, 'status': FinancialTransaction.Status.REALIZED, 'certainty': FinancialTransaction.Certainty.CONFIRMED, 'source': FinancialTransaction.Source.IMPORT})
             created += int(was_created)
+        if incomplete:
+            raise ValidationError(f'Confirme a categoria das linhas: {", ".join(map(str, incomplete[:10]))}.')
         locked.status = ImportBatch.Status.PROCESSED if created else ImportBatch.Status.PARTIALLY_PROCESSED
         locked.finalized_at = timezone.now()
         remove_raw_file(locked)

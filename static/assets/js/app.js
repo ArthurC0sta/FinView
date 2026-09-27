@@ -1,37 +1,36 @@
 
 // AI panel toggle
-function renderAIInsight(target, message){
-  const text = (message || 'Nao foi possivel gerar um insight agora.').trim();
-  const normalized = text.replace(/\s+\*\s+/g, '\n- ').replace(/\s+-\s+/g, '\n- ');
-  let items = normalized
-    .split(/\n+/)
-    .map(item => item.replace(/^[-*]\s*/, '').trim())
-    .filter(Boolean);
-
-  if(items.length <= 1 && text.length > 140){
-    items = text
-      .split(/(?<=[.!?])\s+/)
-      .map(item => item.trim())
-      .filter(Boolean)
-      .slice(0, 4);
-  }
-
+function renderAIInsight(target, analysis){
   target.textContent = '';
-  if(items.length > 1){
+  const sections = [
+    ['Diagnóstico', analysis && analysis.diagnostico],
+    ['Evidências', analysis && analysis.evidencias],
+    ['Risco principal', analysis && analysis.risco],
+    ['Próximas ações', analysis && analysis.acoes],
+    ['Qualidade dos dados', analysis && analysis.qualidade_dados]
+  ];
+  sections.forEach(([label, content]) => {
+    if(!content || (Array.isArray(content) && !content.length)) return;
+    const section = document.createElement('section');
+    const heading = document.createElement('strong');
+    heading.textContent = label;
+    section.appendChild(heading);
+    if(Array.isArray(content)){
     const list = document.createElement('ul');
     list.className = 'ai-insight-list';
-    items.forEach(item => {
+      content.forEach(item => {
       const li = document.createElement('li');
       li.textContent = item;
       list.appendChild(li);
     });
-    target.appendChild(list);
-    return;
-  }
-
-  const paragraph = document.createElement('p');
-  paragraph.textContent = items[0] || text;
-  target.appendChild(paragraph);
+      section.appendChild(list);
+    } else {
+      const paragraph = document.createElement('p');
+      paragraph.textContent = content;
+      section.appendChild(paragraph);
+    }
+    target.appendChild(section);
+  });
 }
 
 function setupAI(){
@@ -39,6 +38,7 @@ function setupAI(){
   const toggle = document.getElementById('aiToggle');
   const close = document.getElementById('aiClose');
   const insight = document.getElementById('aiInsightText');
+  const button = toggle;
   if(!panel) return;
   panel.inert = true;
   let requestedInsight = false;
@@ -46,6 +46,9 @@ function setupAI(){
   const loadInsight = () => {
     if(requestedInsight || !insight || !panel.dataset.aiUrl) return;
     requestedInsight = true;
+    insight.textContent = 'Gerando análise...';
+    insight.setAttribute('aria-busy', 'true');
+    if(button){ button.disabled = true; button.setAttribute('aria-label', 'Gerando análise'); }
     const body = new URLSearchParams({
       month: panel.dataset.month || '',
       prompt: 'Analise se os gastos e receitas do mes estao alinhados ao objetivo financeiro e as metas cadastradas do usuario. Responda em ate 5 topicos curtos, cada um iniciado por "-": situacao, meta, viabilidade, ponto de atencao e acao pratica.'
@@ -60,10 +63,16 @@ function setupAI(){
     })
       .then(response => response.json())
       .then(data => {
-        renderAIInsight(insight, data.message);
+        if(!data.ok || !data.analysis) throw new Error(data.message || 'Análise indisponível');
+        renderAIInsight(insight, data.analysis);
       })
       .catch(() => {
-        insight.textContent = 'Nao foi possivel consultar a IA agora.';
+        insight.textContent = 'Não foi possível gerar a análise agora. Tente novamente em instantes.';
+        requestedInsight = false;
+      })
+      .finally(() => {
+        insight.removeAttribute('aria-busy');
+        if(button){ button.disabled = false; button.setAttribute('aria-label', 'Abrir análise consultiva'); }
       });
   };
   const openPanel = () => {
@@ -128,11 +137,10 @@ function setupTypingQuality(){
   document.querySelectorAll('.money-input').forEach(input => {
     let moneyTimer;
     input.addEventListener('input', () => {
-      input.value = input.value.replace(/[^\d,.]/g, '');
+      const digits = input.value.replace(/\D/g, '');
+      if(!digits){ input.value = ''; return; }
+      input.value = (Number(digits) / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
       window.clearTimeout(moneyTimer);
-      moneyTimer = window.setTimeout(() => {
-        formatMoneyInput(input);
-      }, 550);
     });
     input.addEventListener('blur', () => formatMoneyInput(input));
     input.addEventListener('change', () => formatMoneyInput(input));
@@ -151,6 +159,10 @@ function setupTypingQuality(){
   });
 
   document.querySelectorAll('input[name="name"], input[name="email"], textarea').forEach(input => {
+    if(input.name !== 'email'){
+      input.setAttribute('spellcheck', 'true');
+      input.setAttribute('lang', 'pt-BR');
+    }
     input.addEventListener('blur', () => {
       input.value = input.value.trim();
     });

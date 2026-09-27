@@ -202,6 +202,8 @@ class BusinessProfileAssessment(models.Model):
     preferences = models.JSONField(default=dict, blank=True)
     score = models.PositiveSmallIntegerField(blank=True, null=True)
     recommended_level = models.CharField(max_length=20, choices=Level.choices, blank=True)
+    selected_level = models.CharField(max_length=20, choices=Level.choices, blank=True)
+    level_override_reason = models.CharField(max_length=240, blank=True)
     determining_factors = models.JSONField(default=list, blank=True)
     is_boundary = models.BooleanField(default=False)
     status = models.CharField(max_length=12, choices=Status.choices, default=Status.DRAFT)
@@ -289,6 +291,8 @@ class ImportRow(models.Model):
     row_number = models.PositiveIntegerField()
     date = models.DateField(blank=True, null=True)
     description = models.CharField(max_length=240, blank=True)
+    original_description = models.CharField(max_length=240, blank=True)
+    suggested_description = models.CharField(max_length=240, blank=True)
     amount = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
     direction = models.CharField(max_length=10, choices=FinancialTransaction.Direction.choices, blank=True)
     external_identifier = models.CharField(max_length=160, blank=True)
@@ -323,6 +327,20 @@ class ImportRow(models.Model):
         ordering = ['row_number', 'id']
         constraints = [
             models.UniqueConstraint(fields=['batch', 'row_number'], name='unique_row_number_per_import'),
+        ]
+
+
+class ExternalMigrationRecord(models.Model):
+    source = models.CharField(max_length=30)
+    entity = models.CharField(max_length=40)
+    external_id = models.CharField(max_length=120)
+    local_model = models.CharField(max_length=80)
+    local_id = models.CharField(max_length=120)
+    migrated_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['source', 'entity', 'external_id'], name='unique_external_migration_record'),
         ]
 
 

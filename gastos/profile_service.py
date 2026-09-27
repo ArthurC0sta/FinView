@@ -27,7 +27,11 @@ def evaluate_maturity(answers):
         if raw in (None, '', 'unknown'):
             missing_weight += weight
             continue
-        value = int(raw)
+        try:
+            value = int(raw)
+        except (TypeError, ValueError):
+            missing_weight += weight
+            continue
         score += value * weight
         if value == 2:
             factors.append(key)
