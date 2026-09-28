@@ -1,6 +1,6 @@
 # Desenvolvimento do FinView
 
-O produto oficial é a aplicação Django na raiz do repositório. `sites-app/` e `design-lab/` são referências históricas e não devem ser usados para validar a interface oficial.
+O produto oficial é a aplicação Django na raiz do repositório. `design-lab/` é apenas uma referência histórica e não deve ser usado para validar a interface oficial.
 
 ## Execução local
 
@@ -18,14 +18,3 @@ PYTHONDONTWRITEBYTECODE=1 .venv/bin/python manage.py makemigrations --check --dr
 PYTHONDONTWRITEBYTECODE=1 .venv/bin/python manage.py test
 git diff --check
 ```
-
-## Migração de um snapshot do Sites
-
-O comando abaixo aceita um JSON exportado do D1 com as chaves `users`, `businesses`, `managerial_categories`, `financial_transactions`, `financial_goals`, `business_profile_assessments`, `import_batches` e `import_rows`.
-
-```bash
-python manage.py import_sites_snapshot snapshot.json --dry-run
-python manage.py import_sites_snapshot snapshot.json --send-password-reset
-```
-
-Sempre execute primeiro com `--dry-run` e compare contagens e totais antes da importação real. O comando registra IDs externos para impedir duplicação em uma nova execução.

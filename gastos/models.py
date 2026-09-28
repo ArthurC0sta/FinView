@@ -330,20 +330,6 @@ class ImportRow(models.Model):
         ]
 
 
-class ExternalMigrationRecord(models.Model):
-    source = models.CharField(max_length=30)
-    entity = models.CharField(max_length=40)
-    external_id = models.CharField(max_length=120)
-    local_model = models.CharField(max_length=80)
-    local_id = models.CharField(max_length=120)
-    migrated_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        constraints = [
-            models.UniqueConstraint(fields=['source', 'entity', 'external_id'], name='unique_external_migration_record'),
-        ]
-
-
 class MonthlyIncome(models.Model):
     INCOME_TYPES = [
         ('fixed', 'Salário fixo'),
