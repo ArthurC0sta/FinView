@@ -1,10 +1,6 @@
 .venv/
 *.env
 config_db.env
-sites-app/node_modules/
-sites-app/dist/
-sites-app/.wrangler/
-sites-app/.dev.vars
 db.sqlite3
 .DS_Store
 __pycache__/

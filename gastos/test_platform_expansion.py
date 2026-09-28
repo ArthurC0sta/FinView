@@ -1,5 +1,4 @@
 import tempfile
-import json
 from datetime import timedelta
 from pathlib import Path
 from unittest.mock import patch
@@ -218,19 +217,3 @@ class ImportFlowTests(TestCase):
         batch.refresh_from_db()
         self.assertEqual(batch.status, ImportBatch.Status.EXPIRED)
         self.assertFalse(bool(batch.stored_file))
-
-
-class SitesSnapshotMigrationTests(TestCase):
-    def test_dry_run_valida_snapshot_sem_persistir(self):
-        payload = {
-            'users': [{'id': 'user-1', 'email': 'piloto@example.com'}],
-            'businesses': [{'id': 'business-1', 'owner_user_id': 'user-1', 'name': 'Empresa Piloto'}],
-            'managerial_categories': [], 'financial_transactions': [], 'financial_goals': [],
-            'business_profile_assessments': [], 'import_batches': [], 'import_rows': [],
-        }
-        with tempfile.NamedTemporaryFile('w', suffix='.json', encoding='utf-8') as snapshot:
-            json.dump(payload, snapshot)
-            snapshot.flush()
-            call_command('import_sites_snapshot', snapshot.name, dry_run=True)
-
-        self.assertFalse(User.objects.filter(email='piloto@example.com').exists())
