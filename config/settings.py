@@ -138,12 +138,21 @@ EMAIL_BACKEND = env(
 )
 EMAIL_HOST = env('EMAIL_HOST', default='')
 EMAIL_PORT = env.int('EMAIL_PORT', default=587)
-EMAIL_HOST_USER = env('EMAIL_HOST_USER', default='')
-EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD', default='')
+EMAIL_HOST_USER = env(
+    'EMAIL_HOST_USER',
+    default=env('REMENTE_PROVISORIO', default=''),
+)
+EMAIL_HOST_PASSWORD = env(
+    'EMAIL_HOST_PASSWORD',
+    default=env('SENHA_REMENTE_PROVISORIO', default=''),
+)
 EMAIL_USE_TLS = env.bool('EMAIL_USE_TLS', default=True)
 EMAIL_USE_SSL = env.bool('EMAIL_USE_SSL', default=False)
 EMAIL_TIMEOUT = env.int('EMAIL_TIMEOUT', default=10)
-DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL', default='FinView <no-reply@finview.local>')
+DEFAULT_FROM_EMAIL = env(
+    'DEFAULT_FROM_EMAIL',
+    default=EMAIL_HOST_USER or 'FinView <no-reply@finview.local>',
+)
 PASSWORD_RESET_TIMEOUT = env.int('PASSWORD_RESET_TIMEOUT', default=3600)
 
 

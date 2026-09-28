@@ -33,19 +33,17 @@ services:
       - key: EMAIL_BACKEND
         value: "django.core.mail.backends.smtp.EmailBackend"
       - key: EMAIL_HOST
-        sync: false
+        value: "smtp.mail.me.com"
       - key: EMAIL_PORT
         value: "587"
-      - key: EMAIL_HOST_USER
+      - key: REMENTE_PROVISORIO
         sync: false
-      - key: EMAIL_HOST_PASSWORD
+      - key: SENHA_REMENTE_PROVISORIO
         sync: false
       - key: EMAIL_USE_TLS
         value: "True"
       - key: EMAIL_USE_SSL
         value: "False"
-      - key: DEFAULT_FROM_EMAIL
-        sync: false
       - key: PASSWORD_RESET_TIMEOUT
         value: "3600"
       - key: FINVIEW_IMPORT_MAX_BYTES
