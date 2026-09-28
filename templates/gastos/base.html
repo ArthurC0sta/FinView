@@ -4,8 +4,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% block title %}FinView AI{% endblock %}</title>
-  <meta name="description" content="{% block description %}FinView AI{% endblock %}">
+  <title>{% block title %}FinView{% endblock %}</title>
+  <meta name="description" content="{% block description %}Gestão financeira para pequenos negócios.{% endblock %}">
+  <meta name="theme-color" content="#17251C">
+  <meta property="og:site_name" content="FinView">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="{{ request.scheme }}://{{ request.get_host }}{{ request.path }}">
+  <meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{% static 'assets/img/brand/finview-social.jpg' %}">
+  <link rel="icon" href="{% static 'assets/img/brand/finview-mark.svg' %}" type="image/svg+xml">
   <link rel="stylesheet" href="{% static 'assets/css/styles.css' %}">
   <link rel="stylesheet" href="{% static 'assets/css/product.css' %}?v=20260925-business-core">
   <script src="https://unpkg.com/@phosphor-icons/web@2.1.1" defer></script>

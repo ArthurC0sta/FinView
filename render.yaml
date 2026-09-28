@@ -1,9 +1,10 @@
 services:
   - type: web
     name: finview-ai
-    env: python
+    runtime: python
     buildCommand: bash build.sh
     startCommand: gunicorn config.wsgi:application --bind 0.0.0.0:$PORT
+    healthCheckPath: /health/
     envVars:
       - key: DEBUG
         value: "False"
@@ -17,6 +18,8 @@ services:
         sync: false
       - key: DATABASE_URL
         sync: false
+      - key: DATABASE_CONN_MAX_AGE
+        value: "600"
       - key: GROQ_API_KEY
         sync: false
       - key: GROQ_MODEL
@@ -27,7 +30,35 @@ services:
         value: "openai/gpt-oss-20b"
       - key: GROQ_TIMEOUT_SECONDS
         value: "20"
+      - key: EMAIL_BACKEND
+        value: "django.core.mail.backends.smtp.EmailBackend"
+      - key: EMAIL_HOST
+        sync: false
+      - key: EMAIL_PORT
+        value: "587"
+      - key: EMAIL_HOST_USER
+        sync: false
+      - key: EMAIL_HOST_PASSWORD
+        sync: false
+      - key: EMAIL_USE_TLS
+        value: "True"
+      - key: EMAIL_USE_SSL
+        value: "False"
+      - key: DEFAULT_FROM_EMAIL
+        sync: false
+      - key: PASSWORD_RESET_TIMEOUT
+        value: "3600"
+      - key: FINVIEW_IMPORT_MAX_BYTES
+        value: "10485760"
+      - key: FINVIEW_IMPORT_MAX_ROWS
+        value: "1000"
+      - key: WHITENOISE_USE_FINDERS
+        value: "False"
       - key: SECURE_SSL_REDIRECT
         value: "True"
       - key: SECURE_HSTS_SECONDS
         value: "31536000"
+      - key: SECURE_HSTS_INCLUDE_SUBDOMAINS
+        value: "True"
+      - key: SECURE_HSTS_PRELOAD
+        value: "True"

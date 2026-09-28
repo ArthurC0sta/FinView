@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title">
+  <title id="title">FinView</title>
+  <rect width="64" height="64" rx="14" fill="#17251c"/>
+  <path fill="#fefefc" d="M15 13h29v10H27v8h15v10H27v16H15z"/>
+  <rect x="47" y="47" width="10" height="10" fill="#d75a2a"/>
+</svg>

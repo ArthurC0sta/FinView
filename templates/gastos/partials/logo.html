@@ -1,4 +1,4 @@
-<a href="{% url 'gastos:landing' %}" class="logo">
-  <span class="dot">F</span>
-  <span>FinView <span class="text-gradient">AI</span></span>
+{% load static %}
+<a href="{% url 'gastos:landing' %}" class="brand-logo{% if logo_variant %} brand-logo--{{ logo_variant }}{% endif %}" aria-label="FinView — página inicial">
+  <img src="{% static 'assets/img/brand/finview-wordmark.png' %}" width="300" height="100" alt="FinView">
 </a>

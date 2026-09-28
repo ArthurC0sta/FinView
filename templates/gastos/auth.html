@@ -4,7 +4,7 @@
 <a class="skip-link" href="#auth-content">Ir para o conteúdo</a>
 <main class="auth-layout" id="auth-content">
   <section class="auth-story" aria-label="Apresentação do FinView">
-    <a href="{% url 'gastos:landing' %}" class="auth-brand"><span>F</span>FinView</a>
+    {% include 'gastos/partials/logo.html' with logo_variant='auth' %}
     <div><p class="section-kicker">Gestão financeira para pequenos negócios</p><h1>Decisões melhores começam com dados organizados.</h1><p>Centralize movimentações, compreenda o caixa e transforme evidências em ações gerenciais.</p></div>
     <small>Análises gerenciais não substituem escrituração ou orientação de contador habilitado.</small>
   </section>
