@@ -30,6 +30,7 @@ def complete_profile(user):
         maturity_answers={'records': '1'},
         score=12,
         recommended_level=BusinessProfileAssessment.Level.MANAGERIAL,
+        selected_level=BusinessProfileAssessment.Level.MANAGERIAL,
         status=BusinessProfileAssessment.Status.COMPLETED,
         completed_at=timezone.now(),
     )
@@ -138,6 +139,15 @@ class BusinessCoreFlowTests(TestCase):
         self.assertEqual(transaction.amount, Decimal('149.90'))
         self.assertEqual(transaction.category.name, 'Infraestrutura')
         self.assertEqual(transaction.category.group, ManagerialCategory.Group.UNCLASSIFIED)
+
+    def test_formulario_de_despesa_exibe_categorias_como_opcoes_clicaveis(self):
+        response = self.client.get(reverse('gastos:new_expense'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'class="category-options"')
+        self.assertContains(response, 'name="category"', count=7)
+        self.assertContains(response, 'value="Outros" checked')
+        self.assertNotContains(response, '<select name="category"')
 
     def test_valores_nao_positivos_sao_rejeitados_nos_fluxos(self):
         month = current_month_date()
@@ -349,6 +359,20 @@ class FinancialGoalViewTests(TestCase):
         data = self.goal_data(**overrides)
         return FinancialGoal.objects.create(user=user or self.user, **data)
 
+    def test_formulario_renderiza_tipos_de_meta_como_cartoes_clicaveis(self):
+        response = self.client.get(reverse('gastos:goals'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'class="goal-type-grid"')
+        self.assertContains(response, 'name="goal_type"', count=5)
+        self.assertContains(response, 'value="saving" checked')
+
+        invalid_response = self.client.post(
+            reverse('gastos:goals'),
+            self.goal_data(name='', goal_type='emergency'),
+        )
+        self.assertContains(invalid_response, 'value="emergency" checked')
+
     def test_cria_meta_valida_para_usuario_autenticado(self):
         response = self.client.post(
             reverse('gastos:goals'),
@@ -507,7 +531,10 @@ class FinancialGoalContextTests(TestCase):
         self.assertIn('sem metas financeiras cadastradas', ai_context)
 
 
-@override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend')
+@override_settings(
+    EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend',
+    SECURE_SSL_REDIRECT=False,
+)
 class PasswordResetFlowTests(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(
@@ -520,6 +547,15 @@ class PasswordResetFlowTests(TestCase):
         response = self.client.get(reverse('gastos:login'))
 
         self.assertContains(response, reverse('gastos:password_reset'))
+        self.assertContains(response, 'assets/js/app.js')
+        self.assertContains(response, 'type="password"')
+
+    def test_cadastro_carrega_controle_de_visibilidade_para_campos_de_senha(self):
+        response = self.client.get(reverse('gastos:signup'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'assets/js/app.js')
+        self.assertContains(response, 'type="password"', count=2)
 
     def test_solicitacao_envia_link_sem_expor_se_conta_existe(self):
         response = self.client.post(
@@ -551,6 +587,11 @@ class PasswordResetFlowTests(TestCase):
 
         self.assertEqual(token_response.status_code, 302)
         set_password_url = token_response.url
+        set_password_response = self.client.get(set_password_url)
+
+        self.assertContains(set_password_response, 'assets/js/app.js')
+        self.assertContains(set_password_response, 'type="password"', count=2)
+
         response = self.client.post(
             set_password_url,
             {
@@ -569,6 +610,36 @@ class PasswordResetFlowTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Link inválido ou expirado')
         self.assertContains(response, reverse('gastos:password_reset'))
+
+
+@override_settings(SECURE_SSL_REDIRECT=False)
+class AdminAccessTests(TestCase):
+    def setUp(self):
+        self.regular_user = User.objects.create_user(
+            username='usuario@example.com',
+            email='usuario@example.com',
+            password='SenhaSegura2026!',
+        )
+        self.superuser = User.objects.create_superuser(
+            username='admin@example.com',
+            email='admin@example.com',
+            password='OutraSenhaSegura2026!',
+        )
+
+    def test_usuario_comum_nao_acessa_admin(self):
+        self.client.force_login(self.regular_user)
+
+        response = self.client.get(reverse('admin:index'))
+
+        self.assertRedirects(response, f"{reverse('admin:login')}?next={reverse('admin:index')}")
+
+    def test_superusuario_acessa_admin(self):
+        self.client.force_login(self.superuser)
+
+        response = self.client.get(reverse('admin:index'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Administração do Site')
 
 
 class GroqIntegrationTests(TestCase):
@@ -682,7 +753,33 @@ class GroqIntegrationTests(TestCase):
         response = self.client.post(reverse('gastos:ai_financial_insight'))
 
         self.assertEqual(response.status_code, 503)
-        self.assertIn('Configure API_KEY', response.json()['message'])
+        self.assertEqual(response.json()['message'], 'A análise está temporariamente indisponível.')
+        self.assertEqual(len(response.json()['diagnostic_id']), 12)
+
+    @override_settings(GROQ_API_KEY='test-key', GROQ_ANALYSIS_MODEL='analysis-model')
+    @patch('gastos.views.gerar_analise_estruturada')
+    def test_endpoint_registra_falha_sanitizada_e_retorna_codigo_de_diagnostico(self, analysis_mock):
+        user = User.objects.create_user(
+            username='diagnostico@example.com',
+            email='diagnostico@example.com',
+            password='senha12345',
+        )
+        complete_profile(user)
+        self.client.force_login(user)
+        analysis_mock.side_effect = ValueError('dado financeiro que não pode ir para o log')
+
+        with self.assertLogs('gastos.views', level='ERROR') as captured_logs:
+            response = self.client.post(reverse('gastos:ai_financial_insight'))
+
+        payload = response.json()
+        logs = '\n'.join(captured_logs.output)
+        self.assertEqual(response.status_code, 502)
+        self.assertEqual(payload['message'], 'Não foi possível gerar a análise agora. Tente novamente em instantes.')
+        self.assertEqual(len(payload['diagnostic_id']), 12)
+        self.assertIn(f"diagnostic_id={payload['diagnostic_id']}", logs)
+        self.assertIn('error_code=AI_RESPONSE', logs)
+        self.assertIn('exception_type=ValueError', logs)
+        self.assertNotIn('dado financeiro', logs)
 
     def test_contexto_da_ia_inclui_objetivo_empresarial_sem_identificacao(self):
         user = User.objects.create_user(username='ana@example.com', email='ana@example.com', password='senha12345')

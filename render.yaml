@@ -36,9 +36,11 @@ services:
         value: "smtp.mail.me.com"
       - key: EMAIL_PORT
         value: "587"
-      - key: REMENTE_PROVISORIO
+      - key: EMAIL_HOST_USER
         sync: false
-      - key: SENHA_REMENTE_PROVISORIO
+      - key: EMAIL_HOST_PASSWORD
+        sync: false
+      - key: DEFAULT_FROM_EMAIL
         sync: false
       - key: EMAIL_USE_TLS
         value: "True"

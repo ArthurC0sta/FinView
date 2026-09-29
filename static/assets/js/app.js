@@ -63,11 +63,17 @@ function setupAI(){
     })
       .then(response => response.json())
       .then(data => {
-        if(!data.ok || !data.analysis) throw new Error(data.message || 'Análise indisponível');
+        if(!data.ok || !data.analysis){
+          const error = new Error(data.message || 'Análise indisponível.');
+          error.diagnosticId = data.diagnostic_id || '';
+          throw error;
+        }
         renderAIInsight(insight, data.analysis);
       })
-      .catch(() => {
-        insight.textContent = 'Não foi possível gerar a análise agora. Tente novamente em instantes.';
+      .catch(error => {
+        const message = error && error.message ? error.message : 'Não foi possível gerar a análise agora. Tente novamente em instantes.';
+        const diagnostic = error && error.diagnosticId ? ` Código: ${error.diagnosticId}.` : '';
+        insight.textContent = `${message}${diagnostic}`;
         requestedInsight = false;
       })
       .finally(() => {
@@ -169,7 +175,39 @@ function setupTypingQuality(){
   });
 }
 
+function setupPasswordVisibility(){
+  document.querySelectorAll('.auth-form input[type="password"]').forEach(input => {
+    if(input.parentElement && input.parentElement.classList.contains('password-control')) return;
+
+    const control = document.createElement('span');
+    control.className = 'password-control';
+    input.parentNode.insertBefore(control, input);
+    control.appendChild(input);
+
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'password-toggle';
+    button.setAttribute('aria-pressed', 'false');
+    button.setAttribute('aria-label', 'Mostrar senha');
+    button.title = 'Mostrar senha';
+    button.innerHTML = '<i class="ph ph-eye" aria-hidden="true"></i><span>Mostrar</span>';
+
+    button.addEventListener('click', () => {
+      const willShow = input.type === 'password';
+      input.type = willShow ? 'text' : 'password';
+      button.setAttribute('aria-pressed', String(willShow));
+      button.setAttribute('aria-label', willShow ? 'Ocultar senha' : 'Mostrar senha');
+      button.title = willShow ? 'Ocultar senha' : 'Mostrar senha';
+      button.querySelector('span').textContent = willShow ? 'Ocultar' : 'Mostrar';
+      button.querySelector('i').className = willShow ? 'ph ph-eye-slash' : 'ph ph-eye';
+    });
+
+    control.appendChild(button);
+  });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   setupAI();
   setupTypingQuality();
+  setupPasswordVisibility();
 });
