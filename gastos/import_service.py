@@ -1,11 +1,13 @@
 import csv
 import hashlib
 import io
+import logging
 import re
 from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
+from uuid import uuid4
 
 import xlrd
 from django.conf import settings
@@ -17,6 +19,10 @@ from pypdf import PdfReader
 
 from .ia import classificar_descricoes
 from .models import FinancialTransaction, ImportBatch, ImportRow, ManagerialCategory
+
+
+logger = logging.getLogger(__name__)
+CLASSIFICATION_CHUNK_SIZE = 20
 
 
 @dataclass
@@ -278,19 +284,68 @@ def suggest_categories(batch):
     rows = list(batch.rows.filter(validation_status=ImportRow.ValidationStatus.VALID, suggested_category__isnull=True)[:100])
     categories = list(ManagerialCategory.objects.filter(business=batch.business, is_active=True).values('id', 'name'))
     if not rows or not categories:
-        return
-    try:
-        suggestions = classificar_descricoes([row.description for row in rows], categories)
-    except Exception:
-        return
+        logger.info(
+            'import_classification_skipped batch_id=%s row_count=%s category_count=%s',
+            batch.id,
+            len(rows),
+            len(categories),
+        )
+        return 0
+
     category_map = {item.id: item for item in ManagerialCategory.objects.filter(business=batch.business)}
-    for suggestion in suggestions:
-        row = rows[suggestion['index']]
-        row.suggested_category = category_map.get(suggestion['category_id'])
-        row.classification_confidence = Decimal(str(suggestion['confidence']))
-        corrected = suggestion.get('corrected_description', '').strip()
-        row.suggested_description = corrected if corrected and corrected.casefold() != row.description.casefold() else ''
-        row.save(update_fields=['suggested_category', 'classification_confidence', 'suggested_description', 'updated_at'])
+    updated_rows = []
+    logger.info(
+        'import_classification_started batch_id=%s row_count=%s category_count=%s chunk_size=%s',
+        batch.id,
+        len(rows),
+        len(categories),
+        CLASSIFICATION_CHUNK_SIZE,
+    )
+    for chunk_number, start in enumerate(range(0, len(rows), CLASSIFICATION_CHUNK_SIZE), 1):
+        chunk = rows[start:start + CLASSIFICATION_CHUNK_SIZE]
+        try:
+            suggestions = classificar_descricoes([row.description for row in chunk], categories)
+        except Exception as exc:
+            diagnostic_id = uuid4().hex[:12]
+            logger.error(
+                'import_classification_failed diagnostic_id=%s batch_id=%s chunk=%s row_count=%s error_type=%s',
+                diagnostic_id,
+                batch.id,
+                chunk_number,
+                len(chunk),
+                type(exc).__name__,
+            )
+            continue
+        for suggestion in suggestions:
+            row = chunk[suggestion['index']]
+            category = category_map.get(suggestion['category_id'])
+            if category is None:
+                continue
+            row.suggested_category = category
+            row.classification_confidence = Decimal(str(suggestion['confidence']))
+            corrected = suggestion.get('corrected_description', '').strip()
+            row.suggested_description = corrected if corrected and corrected.casefold() != row.description.casefold() else ''
+            updated_rows.append(row)
+        logger.info(
+            'import_classification_chunk_succeeded batch_id=%s chunk=%s row_count=%s suggestion_count=%s',
+            batch.id,
+            chunk_number,
+            len(chunk),
+            len(suggestions),
+        )
+
+    if updated_rows:
+        ImportRow.objects.bulk_update(
+            updated_rows,
+            ['suggested_category', 'classification_confidence', 'suggested_description', 'updated_at'],
+        )
+    logger.info(
+        'import_classification_finished batch_id=%s requested_count=%s suggestion_count=%s',
+        batch.id,
+        len(rows),
+        len(updated_rows),
+    )
+    return len(updated_rows)
 
 
 def remove_raw_file(batch):

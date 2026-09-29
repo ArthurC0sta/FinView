@@ -10,7 +10,7 @@ from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 
-from .import_service import create_batch, parse_cnab, parse_ofx, parse_pdf, parse_xls
+from .import_service import create_batch, parse_cnab, parse_ofx, parse_pdf, parse_xls, suggest_categories
 from .models import (
     BusinessProfileAssessment,
     FinancialTransaction,
@@ -27,6 +27,7 @@ def complete_profile(user):
         maturity_answers={'records': '1'},
         score=12,
         recommended_level=BusinessProfileAssessment.Level.MANAGERIAL,
+        selected_level=BusinessProfileAssessment.Level.MANAGERIAL,
         status=BusinessProfileAssessment.Status.COMPLETED,
         completed_at=timezone.now(),
     )
@@ -93,6 +94,87 @@ class AuthenticationAndOnboardingTests(TestCase):
         assessment.refresh_from_db()
         self.assertEqual(assessment.recommended_level, BusinessProfileAssessment.Level.MANAGERIAL)
         self.assertEqual(assessment.selected_level, BusinessProfileAssessment.Level.COMPLETE)
+
+    def test_resultado_sem_recomendacao_exige_escolha_entre_os_tres_perfis(self):
+        user = User.objects.create_user(
+            username='escolha@example.com',
+            email='escolha@example.com',
+            password='UmaSenha-Forte-2026',
+        )
+        assessment = BusinessProfileAssessment.objects.create(
+            business=user.businesses.get(is_default=True),
+        )
+        assessment.maturity_answers = {'monthly_volume': 'unknown', 'advanced_controls': '2'}
+        assessment.determining_factors = {
+            'missing_answers': ['monthly_volume'],
+            'inconsistencies': ['advanced_need_with_low_total'],
+        }
+        assessment.status = BusinessProfileAssessment.Status.COMPLETED
+        assessment.completed_at = timezone.now()
+        assessment.save()
+        self.client.force_login(user)
+
+        response = self.client.get(reverse('gastos:onboarding_result'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Escolha seu perfil')
+        self.assertContains(response, 'value="essential"')
+        self.assertContains(response, 'value="managerial"')
+        self.assertContains(response, 'value="complete"')
+        self.assertNotContains(response, 'value=""', status_code=200)
+        self.assertNotContains(response, 'inconclusivo', status_code=200)
+        self.assertNotContains(response, 'advanced_need_with_low_total', status_code=200)
+        self.assertNotContains(response, 'Explicação assistida', status_code=200)
+        self.assertNotContains(response, reverse('gastos:dashboard'), status_code=200)
+
+        dashboard_response = self.client.get(reverse('gastos:dashboard'))
+        self.assertRedirects(dashboard_response, reverse('gastos:onboarding_result'))
+
+    @patch('gastos.views.gerar_resposta_financeira')
+    def test_resultado_sem_recomendacao_nao_envia_dados_tecnicos_para_ia(self, response_mock):
+        user = User.objects.create_user(
+            username='sem-ia@example.com',
+            email='sem-ia@example.com',
+            password='UmaSenha-Forte-2026',
+        )
+        assessment = BusinessProfileAssessment.objects.create(
+            business=user.businesses.get(is_default=True),
+        )
+        assessment.status = BusinessProfileAssessment.Status.COMPLETED
+        assessment.completed_at = timezone.now()
+        assessment.save()
+        self.client.force_login(user)
+
+        response = self.client.post(reverse('gastos:onboarding_result'), {'action': 'explain'})
+
+        self.assertEqual(response.status_code, 200)
+        response_mock.assert_not_called()
+        self.assertContains(response, 'Escolha um dos três perfis para continuar.')
+
+    def test_escolha_resolve_resultado_sem_recomendacao_e_libera_dashboard(self):
+        user = User.objects.create_user(
+            username='perfil@example.com',
+            email='perfil@example.com',
+            password='UmaSenha-Forte-2026',
+        )
+        assessment = BusinessProfileAssessment.objects.create(
+            business=user.businesses.get(is_default=True),
+        )
+        assessment.status = BusinessProfileAssessment.Status.COMPLETED
+        assessment.completed_at = timezone.now()
+        assessment.save()
+        self.client.force_login(user)
+
+        response = self.client.post(reverse('gastos:onboarding_result'), {
+            'action': 'choose_level',
+            'selected_level': BusinessProfileAssessment.Level.MANAGERIAL,
+        })
+
+        self.assertRedirects(response, reverse('gastos:onboarding_result'))
+        assessment.refresh_from_db()
+        self.assertEqual(assessment.recommended_level, '')
+        self.assertEqual(assessment.selected_level, BusinessProfileAssessment.Level.MANAGERIAL)
+        self.assertEqual(self.client.get(reverse('gastos:dashboard')).status_code, 200)
 
 
 class ProfileRulesTests(TestCase):
@@ -190,6 +272,141 @@ class ImportFlowTests(TestCase):
         self.assertEqual(FinancialTransaction.objects.filter(source=FinancialTransaction.Source.IMPORT).count(), 1)
         batch.refresh_from_db()
         self.assertEqual(batch.status, ImportBatch.Status.PROCESSED)
+
+    def test_classificacao_de_lote_e_dividida_em_blocos_e_persiste_sugestoes(self):
+        batch = ImportBatch.objects.create(
+            business=self.business,
+            uploaded_by=self.user,
+            original_name='lote.csv',
+            file_format=ImportBatch.Format.CSV,
+            file_hash='chunked-classification',
+            file_size=1,
+            status=ImportBatch.Status.AWAITING_REVIEW,
+            total_rows=45,
+            valid_rows=45,
+        )
+        ImportRow.objects.bulk_create([
+            ImportRow(
+                batch=batch,
+                row_number=index + 2,
+                date=timezone.localdate(),
+                description=f'Linha {index}',
+                original_description=f'Linha {index}',
+                amount='10.00',
+                direction=FinancialTransaction.Direction.OUTFLOW,
+                fingerprint=f'fingerprint-{index}',
+                validation_status=ImportRow.ValidationStatus.VALID,
+            )
+            for index in range(45)
+        ])
+
+        def classify(descriptions, categories):
+            return [
+                {
+                    'index': index,
+                    'category_id': self.category.id,
+                    'confidence': 0.9,
+                    'corrected_description': description,
+                }
+                for index, description in enumerate(descriptions)
+            ]
+
+        with patch('gastos.import_service.classificar_descricoes', side_effect=classify) as mocked:
+            suggestion_count = suggest_categories(batch)
+
+        self.assertEqual(mocked.call_count, 3)
+        self.assertEqual([len(call.args[0]) for call in mocked.call_args_list], [20, 20, 5])
+        self.assertEqual(suggestion_count, 45)
+        self.assertEqual(batch.rows.filter(suggested_category=self.category).count(), 45)
+
+    def test_falha_em_um_bloco_nao_impede_classificacao_dos_demais(self):
+        batch = ImportBatch.objects.create(
+            business=self.business,
+            uploaded_by=self.user,
+            original_name='lote.csv',
+            file_format=ImportBatch.Format.CSV,
+            file_hash='partial-classification',
+            file_size=1,
+            status=ImportBatch.Status.AWAITING_REVIEW,
+            total_rows=21,
+            valid_rows=21,
+        )
+        ImportRow.objects.bulk_create([
+            ImportRow(
+                batch=batch,
+                row_number=index + 2,
+                date=timezone.localdate(),
+                description=f'Linha {index}',
+                original_description=f'Linha {index}',
+                amount='10.00',
+                direction=FinancialTransaction.Direction.OUTFLOW,
+                fingerprint=f'partial-fingerprint-{index}',
+                validation_status=ImportRow.ValidationStatus.VALID,
+            )
+            for index in range(21)
+        ])
+
+        with patch(
+            'gastos.import_service.classificar_descricoes',
+            side_effect=[RuntimeError('provider unavailable'), [{
+                'index': 0,
+                'category_id': self.category.id,
+                'confidence': 0.8,
+                'corrected_description': 'Linha 20',
+            }]],
+        ), self.assertLogs('gastos.import_service', level='ERROR') as captured:
+            suggestion_count = suggest_categories(batch)
+
+        self.assertEqual(suggestion_count, 1)
+        self.assertEqual(batch.rows.filter(suggested_category=self.category).count(), 1)
+        self.assertIn('import_classification_failed', captured.output[0])
+        self.assertNotIn('provider unavailable', captured.output[0])
+
+    def test_revisao_permite_reprocessar_sugestoes_com_ia(self):
+        self.upload()
+        batch = ImportBatch.objects.get()
+        row = batch.rows.get()
+        corrected_description = 'Hospedagem anual revisada'
+        suggestion = [{
+            'index': 0,
+            'category_id': self.category.id,
+            'confidence': 0.92,
+            'corrected_description': corrected_description,
+        }]
+
+        with patch('gastos.import_service.classificar_descricoes', return_value=suggestion) as mocked:
+            response = self.client.post(
+                reverse('gastos:import_review', args=[batch.public_id]),
+                {
+                    'action': 'classify',
+                    f'row_{row.id}_decision': ImportRow.Decision.IGNORE,
+                    f'row_{row.id}_category': self.category.id,
+                    f'row_{row.id}_description': corrected_description,
+                },
+            )
+
+        self.assertRedirects(response, reverse('gastos:import_review', args=[batch.public_id]))
+        mocked.assert_called_once()
+        self.assertEqual(mocked.call_args.args[0], [corrected_description])
+        row.refresh_from_db()
+        self.assertEqual(row.decision, ImportRow.Decision.IGNORE)
+        self.assertEqual(row.confirmed_category, self.category)
+        self.assertEqual(row.description, corrected_description)
+        self.assertEqual(row.suggested_category, self.category)
+
+    def test_falha_ao_reprocessar_nao_menciona_id_de_diagnostico(self):
+        self.upload()
+        batch = ImportBatch.objects.get()
+
+        with patch('gastos.import_service.classificar_descricoes', return_value=[]):
+            response = self.client.post(
+                reverse('gastos:import_review', args=[batch.public_id]),
+                {'action': 'classify'},
+                follow=True,
+            )
+
+        self.assertContains(response, 'Revisão salva, mas a IA não gerou sugestões agora.')
+        self.assertNotContains(response, 'ID diagnóstico')
 
     def test_duplicate_file_and_other_business_access_are_blocked(self):
         first = self.upload()

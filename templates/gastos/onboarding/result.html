@@ -1,1 +1,56 @@
-{% extends 'gastos/onboarding/base.html' %}{% block title %}Resultado do perfil | FinView{% endblock %}{% block onboarding_content %}<p class="section-kicker">Etapa 4 de 4</p><h1>Perfil recomendado</h1>{% if assessment.recommended_level %}<div class="assessment-result"><span>Recomendação calculada</span><strong>{{ level_label }}</strong>{% if assessment.score != None %}<small>Pontuação determinística: {{ assessment.score }} de 26</small>{% endif %}</div>{% else %}<div class="inline-message"><i class="ph ph-info"></i><p>Faltam respostas para produzir uma recomendação segura.</p></div>{% endif %}{% if assessment.is_boundary %}<p class="boundary-note"><i class="ph ph-arrows-left-right"></i> Resultado próximo de outra faixa. Revise quando a rotina financeira mudar.</p>{% endif %}{% if messages %}{% for message in messages %}<div class="inline-message"><i class="ph ph-info"></i><p>{{ message }}</p></div>{% endfor %}{% endif %}{% if explanation %}<section class="profile-note"><i class="ph ph-sparkle"></i><div><strong>Explicação assistida</strong><p>{{ explanation }}</p></div></section>{% endif %}<div class="level-comparison"><article><strong>Essencial</strong><p>Organizar lançamentos e acompanhar o caixa.</p></article><article><strong>Gerencial</strong><p>Planejar compromissos e comparar resultados.</p></article><article><strong>Completa</strong><p>Acompanhar indicadores e cenários avançados.</p></article></div>{% if assessment.recommended_level %}<form method="post" class="product-form level-choice-form">{% csrf_token %}<input type="hidden" name="action" value="choose_level"><h2>Escolha o nível de acompanhamento</h2>{{ level_form.selected_level }}<label><span>{{ level_form.level_override_reason.label }}</span>{{ level_form.level_override_reason }}{% for error in level_form.level_override_reason.errors %}<small class="field-error">{{ error }}</small>{% endfor %}</label><button class="product-btn primary" type="submit">Salvar escolha</button></form>{% endif %}<p class="product-disclaimer"><i class="ph ph-shield-check"></i><span>A recomendação segue regras transparentes. Você pode escolher outro nível sem alterar a pontuação calculada.</span></p><div class="onboarding-actions"><form method="post">{% csrf_token %}<input type="hidden" name="action" value="explain"><button class="product-btn" type="submit"><i class="ph ph-sparkle"></i>Explicar recomendação</button></form><a class="product-btn" href="{% url 'gastos:onboarding_profile' %}">Revisar respostas</a><a class="product-btn primary" href="{% url 'gastos:dashboard' %}">Acessar dashboard <i class="ph ph-arrow-right"></i></a></div>{% endblock %}
+{% extends 'gastos/onboarding/base.html' %}
+{% block title %}Resultado do perfil | FinView{% endblock %}
+{% block onboarding_content %}
+<p class="section-kicker">Etapa 4 de 4</p>
+<h1>{% if assessment.recommended_level %}Perfil recomendado{% else %}Escolha seu perfil{% endif %}</h1>
+
+{% if assessment.recommended_level %}
+  <div class="assessment-result">
+    <span>Recomendação calculada</span>
+    <strong>{{ level_label }}</strong>
+    {% if assessment.score != None %}<small>Pontuação determinística: {{ assessment.score }} de 26</small>{% endif %}
+  </div>
+{% else %}
+  <div class="inline-message"><i class="ph ph-info"></i><p>Com as respostas atuais, mais de um perfil pode atender ao seu momento. Escolha uma das três opções abaixo para personalizar o acompanhamento.</p></div>
+{% endif %}
+
+{% if assessment.is_boundary %}<p class="boundary-note"><i class="ph ph-arrows-left-right"></i> Resultado próximo de outra faixa. Revise quando a rotina financeira mudar.</p>{% endif %}
+{% if messages %}{% for message in messages %}<div class="inline-message"><i class="ph ph-info"></i><p>{{ message }}</p></div>{% endfor %}{% endif %}
+{% if explanation %}<section class="profile-note"><i class="ph ph-sparkle"></i><div><strong>Explicação assistida</strong><p>{{ explanation }}</p></div></section>{% endif %}
+
+<form method="post" class="product-form level-choice-form">
+  {% csrf_token %}
+  <input type="hidden" name="action" value="choose_level">
+  <h2>{% if assessment.recommended_level %}Escolha o nível de acompanhamento{% else %}Selecione uma opção para continuar{% endif %}</h2>
+  <p class="level-choice-intro">Compare os objetivos e selecione o perfil que melhor representa a rotina da empresa agora.</p>
+  <div class="profile-level-options" role="radiogroup" aria-label="Nível de acompanhamento">
+    <label class="profile-level-option" for="id_selected_level_essential">
+      <input type="radio" name="selected_level" value="essential" id="id_selected_level_essential" {% if level_form.selected_level.value == 'essential' %}checked{% endif %}>
+      <span class="profile-level-copy"><strong>Essencial</strong><small>Organizar lançamentos e acompanhar o caixa.</small></span>
+      {% if assessment.recommended_level == 'essential' %}<span class="recommended-label">Recomendado</span>{% endif %}
+    </label>
+    <label class="profile-level-option" for="id_selected_level_managerial">
+      <input type="radio" name="selected_level" value="managerial" id="id_selected_level_managerial" {% if level_form.selected_level.value == 'managerial' %}checked{% endif %}>
+      <span class="profile-level-copy"><strong>Gerencial</strong><small>Planejar compromissos e comparar resultados.</small></span>
+      {% if assessment.recommended_level == 'managerial' %}<span class="recommended-label">Recomendado</span>{% endif %}
+    </label>
+    <label class="profile-level-option" for="id_selected_level_complete">
+      <input type="radio" name="selected_level" value="complete" id="id_selected_level_complete" {% if level_form.selected_level.value == 'complete' %}checked{% endif %}>
+      <span class="profile-level-copy"><strong>Completa</strong><small>Acompanhar indicadores e cenários avançados.</small></span>
+      {% if assessment.recommended_level == 'complete' %}<span class="recommended-label">Recomendado</span>{% endif %}
+    </label>
+  </div>
+  {% for error in level_form.selected_level.errors %}<small class="field-error">{{ error }}</small>{% endfor %}
+  {% if assessment.recommended_level %}
+    <label class="level-override-field"><span>Se escolher outro nível, conte brevemente o motivo</span>{{ level_form.level_override_reason }}{% for error in level_form.level_override_reason.errors %}<small class="field-error">{{ error }}</small>{% endfor %}</label>
+  {% endif %}
+  <div class="level-choice-actions"><button class="product-btn primary" type="submit">Salvar escolha</button></div>
+</form>
+
+<p class="product-disclaimer"><i class="ph ph-shield-check"></i><span>{% if assessment.recommended_level %}A recomendação segue regras transparentes. Você pode escolher outro nível sem alterar a pontuação calculada.{% else %}Sua escolha define somente o nível de acompanhamento e pode ser revisada depois no perfil.{% endif %}</span></p>
+<div class="onboarding-actions">
+  {% if assessment.recommended_level %}<form method="post">{% csrf_token %}<input type="hidden" name="action" value="explain"><button class="product-btn" type="submit"><i class="ph ph-sparkle"></i>Explicar recomendação</button></form>{% endif %}
+  <a class="product-btn" href="{% url 'gastos:onboarding_profile' %}">Revisar respostas</a>
+  {% if assessment.selected_level %}<a class="product-btn primary" href="{% url 'gastos:dashboard' %}">Acessar dashboard <i class="ph ph-arrow-right"></i></a>{% endif %}
+</div>
+{% endblock %}

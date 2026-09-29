@@ -150,13 +150,22 @@ class ProfileLevelChoiceForm(forms.ModelForm):
         labels = {'selected_level': 'Nível escolhido', 'level_override_reason': 'Por que este nível atende melhor agora?'}
         widgets = {
             'selected_level': forms.RadioSelect(attrs={'class': 'level-options'}),
-            'level_override_reason': forms.Textarea(attrs={'rows': 3, 'class': 'textarea', 'spellcheck': 'true'}),
+            'level_override_reason': forms.Textarea(attrs={'rows': 2, 'class': 'textarea', 'spellcheck': 'true'}),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['selected_level'].choices = BusinessProfileAssessment.Level.choices
 
     def clean(self):
         cleaned = super().clean()
         selected = cleaned.get('selected_level')
-        if selected and selected != self.instance.recommended_level and not (cleaned.get('level_override_reason') or '').strip():
+        has_different_recommendation = (
+            self.instance.recommended_level
+            and selected
+            and selected != self.instance.recommended_level
+        )
+        if has_different_recommendation and not (cleaned.get('level_override_reason') or '').strip():
             self.add_error('level_override_reason', 'Explique brevemente por que prefere um nível diferente.')
         return cleaned
 

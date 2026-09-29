@@ -1,6 +1,9 @@
 import calendar
+import logging
 from decimal import Decimal, InvalidOperation
+from uuid import uuid4
 
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import login as auth_login, logout as auth_logout
 from django.db import transaction
@@ -11,6 +14,14 @@ from django.urls import reverse
 from django.utils import timezone
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
+from groq import (
+    APIConnectionError,
+    APIStatusError,
+    APITimeoutError,
+    AuthenticationError,
+    BadRequestError,
+    RateLimitError,
+)
 
 from .forms import (
     BusinessOnboardingForm,
@@ -23,7 +34,7 @@ from .forms import (
     SignupForm,
 )
 from .ia import gerar_analise_estruturada, gerar_resposta_financeira, groq_configured
-from .import_service import confirm_batch, create_batch, remove_raw_file
+from .import_service import confirm_batch, create_batch, remove_raw_file, suggest_categories
 from .models import (
     Business,
     BusinessProfileAssessment,
@@ -34,6 +45,9 @@ from .models import (
     ManagerialCategory,
 )
 from .profile_service import evaluate_maturity
+
+
+logger = logging.getLogger(__name__)
 
 
 EXPENSES = [
@@ -450,8 +464,11 @@ def completed_business_profile(user):
 def require_session_user(request):
     if not request.user.is_authenticated:
         return None, redirect('gastos:login')
-    if completed_business_profile(request.user) is None:
+    assessment = completed_business_profile(request.user)
+    if assessment is None:
         return None, redirect('gastos:onboarding_business')
+    if not assessment.selected_level:
+        return None, redirect('gastos:onboarding_result')
     return session_user(request), None
 
 
@@ -596,27 +613,45 @@ def onboarding_result(request):
         messages.success(request, 'Nível de acompanhamento atualizado.')
         return redirect('gastos:onboarding_result')
     if request.method == 'POST' and request.POST.get('action') == 'explain':
-        if not groq_configured():
+        if not assessment.recommended_level:
+            messages.info(request, 'Escolha um dos três perfis para continuar.')
+        elif not groq_configured():
             messages.error(request, 'A explicação assistida está temporariamente indisponível.')
         else:
+            factor_labels = {
+                'records': 'organização dos registros',
+                'update_frequency': 'frequência de atualização',
+                'monthly_volume': 'volume de movimentações',
+                'future_commitments': 'controle de compromissos futuros',
+                'people_involved': 'pessoas envolvidas na gestão',
+                'predictability': 'previsibilidade das receitas',
+                'management_need': 'necessidade gerencial informada',
+                'advanced_controls': 'necessidade de controles avançados',
+            }
+            determining_labels = [
+                factor_labels[key]
+                for key in factors.get('factors', [])
+                if key in factor_labels
+            ]
             try:
                 explanation = gerar_resposta_financeira(
-                    'Explique em linguagem clara por que este nível foi recomendado, sem alterar o resultado e sem inferir dados ausentes.',
+                    'Explique em até dois parágrafos curtos por que este perfil foi recomendado. Use apenas texto simples em português, sem Markdown, códigos internos ou nomes de campos.',
                     contexto=(
-                        f'Nível calculado por regras: {levels.get(assessment.recommended_level, "inconclusivo")}.\n'
-                        f'Pontuação: {assessment.score if assessment.score is not None else "não calculada"}.\n'
-                        f'Fatores técnicos: {factors}.'
+                        f'Perfil recomendado: {levels[assessment.recommended_level]}.'
+                        f' Pontuação: {assessment.score} de 26.'
+                        f' Aspectos determinantes: {", ".join(determining_labels) or "conjunto das respostas informadas"}.'
                     ),
                     purpose='analysis',
                     max_tokens=300,
                 )
+                explanation = explanation.replace('**', '').replace('`', '').replace('*', '').strip()
             except Exception:
                 messages.error(request, 'A explicação assistida está temporariamente indisponível. O resultado determinístico permanece válido.')
     return render_page(
         request,
         'gastos/onboarding/result.html',
         assessment=assessment,
-        level_label=levels.get(assessment.recommended_level, 'Resultado inconclusivo'),
+        level_label=levels.get(assessment.recommended_level, ''),
         factors=factors,
         explanation=explanation,
         level_form=level_form,
@@ -674,6 +709,13 @@ def import_review(request, public_id):
                 if corrected_description:
                     row.description = corrected_description[:240]
                 row.save(update_fields=['decision', 'confirmed_category', 'description', 'updated_at'])
+        if request.POST.get('action') == 'classify':
+            suggestion_count = suggest_categories(batch)
+            if suggestion_count:
+                messages.success(request, f'Revisão salva. A IA classificou {suggestion_count} linha(s); confira as sugestões antes de confirmar.')
+            else:
+                messages.error(request, 'Revisão salva, mas a IA não gerou sugestões agora. Tente novamente em instantes.')
+            return redirect('gastos:import_review', public_id=batch.public_id)
         if request.POST.get('action') == 'confirm':
             try:
                 created = confirm_batch(batch, request.user)
@@ -845,14 +887,25 @@ def add_monthly_income(user, reference_month, amount, income_type):
 
 @require_POST
 def ai_financial_insight(request):
+    diagnostic_id = uuid4().hex[:12]
     user, response = require_session_user(request)
     if response:
+        logger.warning(
+            'ai_insight_rejected diagnostic_id=%s reason=unauthenticated',
+            diagnostic_id,
+        )
         return JsonResponse({'ok': False, 'message': 'Faça login para usar a IA.'}, status=401)
     if not groq_configured():
+        logger.error(
+            'ai_insight_failed diagnostic_id=%s error_code=AI_CONFIG model=%s',
+            diagnostic_id,
+            settings.GROQ_ANALYSIS_MODEL,
+        )
         return JsonResponse(
             {
                 'ok': False,
-                'message': 'Configure API_KEY ou GROQ_API_KEY no arquivo .env para ativar a IA.',
+                'message': 'A análise está temporariamente indisponível.',
+                'diagnostic_id': diagnostic_id,
             },
             status=503,
         )
@@ -862,17 +915,60 @@ def ai_financial_insight(request):
         'prompt',
         'Analise se os gastos e receitas do mes estao alinhados ao objetivo financeiro e as metas cadastradas do usuario. Responda em ate 5 topicos curtos, cada um iniciado por "-": situacao, meta, viabilidade, ponto de atencao e acao pratica.',
     )
+    logger.info(
+        'ai_insight_received diagnostic_id=%s user_id=%s month=%s model=%s',
+        diagnostic_id,
+        request.user.id,
+        reference_month.isoformat(),
+        settings.GROQ_ANALYSIS_MODEL,
+    )
     try:
+        logger.info(
+            'ai_insight_provider_request_started diagnostic_id=%s model=%s',
+            diagnostic_id,
+            settings.GROQ_ANALYSIS_MODEL,
+        )
         insight = gerar_analise_estruturada(ai_context_for_month(request.user, reference_month))
-    except Exception:
+    except Exception as exc:
+        if isinstance(exc, APITimeoutError):
+            error_code, response_status = 'AI_TIMEOUT', 504
+        elif isinstance(exc, AuthenticationError):
+            error_code, response_status = 'AI_AUTH', 502
+        elif isinstance(exc, RateLimitError):
+            error_code, response_status = 'AI_RATE_LIMIT', 503
+        elif isinstance(exc, BadRequestError):
+            error_code, response_status = 'AI_REQUEST', 502
+        elif isinstance(exc, APIConnectionError):
+            error_code, response_status = 'AI_CONNECTION', 502
+        elif isinstance(exc, APIStatusError):
+            error_code, response_status = 'AI_PROVIDER', 502
+        elif isinstance(exc, ValueError):
+            error_code, response_status = 'AI_RESPONSE', 502
+        else:
+            error_code, response_status = 'AI_INTERNAL', 500
+        logger.error(
+            'ai_insight_failed diagnostic_id=%s error_code=%s exception_type=%s provider_status=%s provider_request_id=%s model=%s',
+            diagnostic_id,
+            error_code,
+            type(exc).__name__,
+            getattr(exc, 'status_code', None),
+            getattr(exc, 'request_id', None),
+            settings.GROQ_ANALYSIS_MODEL,
+        )
         return JsonResponse(
             {
                 'ok': False,
-                'message': 'Nao foi possivel consultar a IA agora. Tente novamente em instantes.',
+                'message': 'Não foi possível gerar a análise agora. Tente novamente em instantes.',
+                'diagnostic_id': diagnostic_id,
             },
-            status=502,
+            status=response_status,
         )
 
+    logger.info(
+        'ai_insight_succeeded diagnostic_id=%s model=%s',
+        diagnostic_id,
+        settings.GROQ_ANALYSIS_MODEL,
+    )
     return JsonResponse({'ok': True, 'analysis': insight})
 
 
