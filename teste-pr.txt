@@ -1,0 +1,1 @@
+Arquivo temporário para validar o fluxo automático de pull request e aprovação.
